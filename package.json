@@ -1,0 +1,38 @@
+{
+  "name": "gmc-cms-project",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Content Management System - Master's Level Project",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=backend & npm run dev --workspace=frontend",
+    "build": "npm run build --workspace=backend && npm run build --workspace=frontend",
+    "test": "npm run test --workspace=backend && npm run test --workspace=frontend",
+    "lint": "npm run lint --workspace=backend && npm run lint --workspace=frontend",
+    "format": "npm run format --workspace=backend && npm run format --workspace=frontend",
+    "db:migrate:dev": "npm run prisma:migrate:dev --workspace=backend",
+    "db:migrate:deploy": "npm run prisma:migrate:deploy --workspace=backend",
+    "db:seed": "npm run prisma:seed --workspace=backend",
+    "db:studio": "npm run prisma:studio --workspace=backend",
+    "db:reset": "npm run prisma:reset --workspace=backend",
+    "prepare": "husky"
+  },
+  "license": "ISC",
+  "lint-staged": {
+    "backend/**/*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "frontend/**/*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7"
+  }
+}
