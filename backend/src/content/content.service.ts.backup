@@ -1,0 +1,888 @@
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { Content, ContentStatus, Prisma } from '@prisma/client';
+
+import { PaginatedResponseDto } from '../common/dto/paginated-response.dto';
+import { generateUniqueSlug, slugify } from '../common/utils/slug.util';
+import { PrismaService } from '../prisma/prisma.service';
+import { ContentFilterDto } from './dto/content-filter.dto';
+import { CreateContentDto } from './dto/create-content.dto';
+import { UpdateContentDto } from './dto/update-content.dto';
+
+/**
+ * Content with all relations
+ */
+export interface ContentWithRelations extends Content {
+  author: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+  };
+  categories: Array<{
+    category: {
+      id: string;
+      name: string;
+      slug: string;
+    };
+  }>;
+  tags: Array<{
+    tag: {
+      id: string;
+      name: string;
+      slug: string;
+    };
+  }>;
+  featuredImage?: {
+    id: string;
+    filename: string;
+    url: string;
+    thumbnailUrl?: string;
+    altText?: string;
+  } | null;
+}
+
+@Injectable()
+export class ContentService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * Create new content
+   * Auto-generates unique slug from title
+   * Creates initial content version
+   * Connects categories and tags via join tables
+   */
+  async create(
+    dto: CreateContentDto,
+    authorId: string,
+  ): Promise<ContentWithRelations> {
+    // Validate scheduledAt is future date when status is SCHEDULED
+    if (dto.status === ContentStatus.SCHEDULED) {
+      if (!dto.scheduledAt) {
+        throw new BadRequestException(
+          'scheduledAt is required when status is SCHEDULED',
+        );
+      }
+
+      const scheduledDate = new Date(dto.scheduledAt);
+      if (scheduledDate <= new Date()) {
+        throw new BadRequestException(
+          'scheduledAt must be a future date when status is SCHEDULED',
+        );
+      }
+    }
+
+    // Validate featured image exists if provided
+    if (dto.featuredImageId) {
+      const imageExists = await this.prisma.media.findUnique({
+        where: { id: dto.featuredImageId },
+      });
+
+      if (!imageExists) {
+        throw new NotFoundException(
+          `Featured image with ID ${dto.featuredImageId} not found`,
+        );
+      }
+    }
+
+    // Validate categories exist if provided
+    if (dto.categoryIds && dto.categoryIds.length > 0) {
+      const categories = await this.prisma.category.findMany({
+        where: { id: { in: dto.categoryIds } },
+      });
+
+      if (categories.length !== dto.categoryIds.length) {
+        throw new NotFoundException('One or more categories not found');
+      }
+    }
+
+    // Validate tags exist if provided
+    if (dto.tagIds && dto.tagIds.length > 0) {
+      const tags = await this.prisma.tag.findMany({
+        where: { id: { in: dto.tagIds } },
+      });
+
+      if (tags.length !== dto.tagIds.length) {
+        throw new NotFoundException('One or more tags not found');
+      }
+    }
+
+    // Generate unique slug
+    const baseSlug = slugify(dto.title);
+    const slug = await this.ensureUniqueSlug(baseSlug);
+
+    // Set publishedAt if status is PUBLISHED
+    const publishedAt =
+      dto.status === ContentStatus.PUBLISHED ? new Date() : null;
+
+    // Use transaction to ensure atomicity
+    const content = await this.prisma.$transaction(async (tx) => {
+      // Create content
+      const newContent = await tx.content.create({
+        data: {
+          title: dto.title,
+          slug,
+          body: dto.body,
+          excerpt: dto.excerpt,
+          status: dto.status || ContentStatus.DRAFT,
+          authorId,
+          featuredImageId: dto.featuredImageId,
+          publishedAt,
+          scheduledAt: dto.scheduledAt ? new Date(dto.scheduledAt) : null,
+        },
+      });
+
+      // Create initial version
+      await tx.contentVersion.create({
+        data: {
+          contentId: newContent.id,
+          title: newContent.title,
+          body: newContent.body,
+          versionNumber: 1,
+          changeDescription: 'Initial creation',
+          createdById: authorId,
+        },
+      });
+
+      // Connect categories
+      if (dto.categoryIds && dto.categoryIds.length > 0) {
+        await tx.contentCategory.createMany({
+          data: dto.categoryIds.map((categoryId) => ({
+            contentId: newContent.id,
+            categoryId,
+          })),
+        });
+      }
+
+      // Connect tags
+      if (dto.tagIds && dto.tagIds.length > 0) {
+        await tx.contentTag.createMany({
+          data: dto.tagIds.map((tagId) => ({
+            contentId: newContent.id,
+            tagId,
+          })),
+        });
+      }
+
+      // Fetch and return content with relations
+      return tx.content.findUnique({
+        where: { id: newContent.id },
+        include: {
+          author: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+              role: true,
+            },
+          },
+          categories: {
+            include: {
+              category: {
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                },
+              },
+            },
+          },
+          tags: {
+            include: {
+              tag: {
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                },
+              },
+            },
+          },
+          featuredImage: {
+            select: {
+              id: true,
+              filename: true,
+              url: true,
+              thumbnailUrl: true,
+              altText: true,
+            },
+          },
+        },
+      });
+    });
+
+    return content as ContentWithRelations;
+  }
+
+  /**
+   * Find all content with pagination and filters
+   * Supports filtering by status, author, category, tag, and search
+   */
+  async findAll(
+    dto: ContentFilterDto,
+  ): Promise<PaginatedResponseDto<ContentWithRelations>> {
+    const page = dto.page || 1;
+    const limit = dto.limit || 10;
+    const skip = (page - 1) * limit;
+
+    // Build where clause
+    const where: Prisma.ContentWhereInput = {};
+
+    if (dto.status) {
+      where.status = dto.status;
+    }
+
+    if (dto.authorId) {
+      where.authorId = dto.authorId;
+    }
+
+    if (dto.categoryId) {
+      where.categories = {
+        some: {
+          categoryId: dto.categoryId,
+        },
+      };
+    }
+
+    if (dto.tagId) {
+      where.tags = {
+        some: {
+          tagId: dto.tagId,
+        },
+      };
+    }
+
+    if (dto.search) {
+      where.OR = [
+        { title: { contains: dto.search, mode: 'insensitive' } },
+        { body: { contains: dto.search, mode: 'insensitive' } },
+      ];
+    }
+
+    // Build orderBy
+    const orderBy: Prisma.ContentOrderByWithRelationInput = dto.sortBy
+      ? { [dto.sortBy]: dto.sortOrder || 'desc' }
+      : { createdAt: 'desc' };
+
+    // Execute queries in parallel
+    const [content, total] = await Promise.all([
+      this.prisma.content.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy,
+        include: {
+          author: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+              role: true,
+            },
+          },
+          categories: {
+            include: {
+              category: {
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                },
+              },
+            },
+          },
+          tags: {
+            include: {
+              tag: {
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                },
+              },
+            },
+          },
+          featuredImage: {
+            select: {
+              id: true,
+              filename: true,
+              url: true,
+              thumbnailUrl: true,
+              altText: true,
+            },
+          },
+        },
+      }),
+      this.prisma.content.count({ where }),
+    ]);
+
+    return new PaginatedResponseDto(
+      content as ContentWithRelations[],
+      total,
+      page,
+      limit,
+    );
+  }
+
+  /**
+   * Find content by ID
+   * Returns content with all relations
+   */
+  async findOne(id: string): Promise<ContentWithRelations> {
+    const content = await this.prisma.content.findUnique({
+      where: { id },
+      include: {
+        author: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+          },
+        },
+        categories: {
+          include: {
+            category: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
+          },
+        },
+        tags: {
+          include: {
+            tag: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
+          },
+        },
+        featuredImage: {
+          select: {
+            id: true,
+            filename: true,
+            url: true,
+            thumbnailUrl: true,
+            altText: true,
+          },
+        },
+      },
+    });
+
+    if (!content) {
+      throw new NotFoundException(`Content with ID ${id} not found`);
+    }
+
+    return content as ContentWithRelations;
+  }
+
+  /**
+   * Find PUBLISHED content by slug (public endpoint)
+   * Only returns published content
+   */
+  async findBySlug(slug: string): Promise<ContentWithRelations> {
+    const content = await this.prisma.content.findUnique({
+      where: { slug },
+      include: {
+        author: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+          },
+        },
+        categories: {
+          include: {
+            category: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
+          },
+        },
+        tags: {
+          include: {
+            tag: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
+          },
+        },
+        featuredImage: {
+          select: {
+            id: true,
+            filename: true,
+            url: true,
+            thumbnailUrl: true,
+            altText: true,
+          },
+        },
+      },
+    });
+
+    if (!content) {
+      throw new NotFoundException(`Content with slug "${slug}" not found`);
+    }
+
+    // Only return published content for public access
+    if (content.status !== ContentStatus.PUBLISHED) {
+      throw new NotFoundException(`Content with slug "${slug}" not found`);
+    }
+
+    return content as ContentWithRelations;
+  }
+
+  /**
+   * Update content
+   * Regenerates slug if title changes
+   * Creates new version if title or body changes
+   * Updates category and tag associations
+   */
+  async update(
+    id: string,
+    dto: UpdateContentDto,
+    userId: string,
+  ): Promise<ContentWithRelations> {
+    // Check if content exists
+    const existingContent = await this.prisma.content.findUnique({
+      where: { id },
+      include: {
+        versions: {
+          orderBy: { versionNumber: 'desc' },
+          take: 1,
+        },
+      },
+    });
+
+    if (!existingContent) {
+      throw new NotFoundException(`Content with ID ${id} not found`);
+    }
+
+    // Validate scheduledAt is future date when status is SCHEDULED
+    if (dto.status === ContentStatus.SCHEDULED) {
+      if (!dto.scheduledAt) {
+        throw new BadRequestException(
+          'scheduledAt is required when status is SCHEDULED',
+        );
+      }
+
+      const scheduledDate = new Date(dto.scheduledAt);
+      if (scheduledDate <= new Date()) {
+        throw new BadRequestException(
+          'scheduledAt must be a future date when status is SCHEDULED',
+        );
+      }
+    }
+
+    // Validate featured image if provided
+    if (dto.featuredImageId !== undefined) {
+      if (dto.featuredImageId) {
+        const imageExists = await this.prisma.media.findUnique({
+          where: { id: dto.featuredImageId },
+        });
+
+        if (!imageExists) {
+          throw new NotFoundException(
+            `Featured image with ID ${dto.featuredImageId} not found`,
+          );
+        }
+      }
+    }
+
+    // Validate categories if provided
+    if (dto.categoryIds && dto.categoryIds.length > 0) {
+      const categories = await this.prisma.category.findMany({
+        where: { id: { in: dto.categoryIds } },
+      });
+
+      if (categories.length !== dto.categoryIds.length) {
+        throw new NotFoundException('One or more categories not found');
+      }
+    }
+
+    // Validate tags if provided
+    if (dto.tagIds && dto.tagIds.length > 0) {
+      const tags = await this.prisma.tag.findMany({
+        where: { id: { in: dto.tagIds } },
+      });
+
+      if (tags.length !== dto.tagIds.length) {
+        throw new NotFoundException('One or more tags not found');
+      }
+    }
+
+    // Generate new slug if title changed
+    let slug = existingContent.slug;
+    if (dto.title && dto.title !== existingContent.title) {
+      const baseSlug = slugify(dto.title);
+      slug = await this.ensureUniqueSlug(baseSlug, id);
+    }
+
+    // Determine if we need to set publishedAt
+    let publishedAt = existingContent.publishedAt;
+    if (
+      dto.status === ContentStatus.PUBLISHED &&
+      existingContent.status !== ContentStatus.PUBLISHED
+    ) {
+      publishedAt = new Date();
+    }
+
+    // Check if we need to create a new version
+    const shouldCreateVersion =
+      (dto.title && dto.title !== existingContent.title) ||
+      (dto.body && dto.body !== existingContent.body);
+
+    // Use transaction to ensure atomicity
+    const content = await this.prisma.$transaction(async (tx) => {
+      // Update content
+      const updatedContent = await tx.content.update({
+        where: { id },
+        data: {
+          title: dto.title,
+          slug,
+          body: dto.body,
+          excerpt: dto.excerpt,
+          status: dto.status,
+          featuredImageId: dto.featuredImageId,
+          publishedAt,
+          scheduledAt: dto.scheduledAt ? new Date(dto.scheduledAt) : undefined,
+        },
+      });
+
+      // Create new version if content changed
+      if (shouldCreateVersion) {
+        const lastVersion = existingContent.versions[0];
+        const nextVersionNumber = lastVersion ? lastVersion.versionNumber + 1 : 1;
+
+        await tx.contentVersion.create({
+          data: {
+            contentId: id,
+            title: dto.title || existingContent.title,
+            body: dto.body || existingContent.body,
+            versionNumber: nextVersionNumber,
+            changeDescription: 'Content updated',
+            createdById: userId,
+          },
+        });
+      }
+
+      // Update categories if provided
+      if (dto.categoryIds !== undefined) {
+        // Delete existing associations
+        await tx.contentCategory.deleteMany({
+          where: { contentId: id },
+        });
+
+        // Create new associations
+        if (dto.categoryIds.length > 0) {
+          await tx.contentCategory.createMany({
+            data: dto.categoryIds.map((categoryId) => ({
+              contentId: id,
+              categoryId,
+            })),
+          });
+        }
+      }
+
+      // Update tags if provided
+      if (dto.tagIds !== undefined) {
+        // Delete existing associations
+        await tx.contentTag.deleteMany({
+          where: { contentId: id },
+        });
+
+        // Create new associations
+        if (dto.tagIds.length > 0) {
+          await tx.contentTag.createMany({
+            data: dto.tagIds.map((tagId) => ({
+              contentId: id,
+              tagId,
+            })),
+          });
+        }
+      }
+
+      // Fetch and return updated content with relations
+      return tx.content.findUnique({
+        where: { id },
+        include: {
+          author: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+              role: true,
+            },
+          },
+          categories: {
+            include: {
+              category: {
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                },
+              },
+            },
+          },
+          tags: {
+            include: {
+              tag: {
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                },
+              },
+            },
+          },
+          featuredImage: {
+            select: {
+              id: true,
+              filename: true,
+              url: true,
+              thumbnailUrl: true,
+              altText: true,
+            },
+          },
+        },
+      });
+    });
+
+    return content as ContentWithRelations;
+  }
+
+  /**
+   * Soft delete content by setting status to ARCHIVED
+   */
+  async remove(id: string): Promise<void> {
+    const content = await this.prisma.content.findUnique({
+      where: { id },
+    });
+
+    if (!content) {
+      throw new NotFoundException(`Content with ID ${id} not found`);
+    }
+
+    await this.prisma.content.update({
+      where: { id },
+      data: { status: ContentStatus.ARCHIVED },
+    });
+  }
+
+  /**
+   * Hard delete content (Admin only)
+   * Cascades to versions, categories, tags, comments, seo, analytics
+   */
+  async hardRemove(id: string): Promise<void> {
+    const content = await this.prisma.content.findUnique({
+      where: { id },
+    });
+
+    if (!content) {
+      throw new NotFoundException(`Content with ID ${id} not found`);
+    }
+
+    // Prisma cascade will handle related records
+    await this.prisma.content.delete({
+      where: { id },
+    });
+  }
+
+  /**
+   * Schedule content for future publishing
+   * Sets status to SCHEDULED and scheduledAt to specified date
+   */
+  async scheduleContent(
+    id: string,
+    scheduledAt: Date,
+  ): Promise<ContentWithRelations> {
+    // Check if content exists
+    const content = await this.prisma.content.findUnique({
+      where: { id },
+    });
+
+    if (!content) {
+      throw new NotFoundException(`Content with ID ${id} not found`);
+    }
+
+    // Validate scheduledAt is in the future
+    if (scheduledAt <= new Date()) {
+      throw new BadRequestException('scheduledAt must be a future date');
+    }
+
+    // Update content
+    const updated = await this.prisma.content.update({
+      where: { id },
+      data: {
+        status: ContentStatus.SCHEDULED,
+        scheduledAt,
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+          },
+        },
+        categories: {
+          include: {
+            category: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
+          },
+        },
+        tags: {
+          include: {
+            tag: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
+          },
+        },
+        featuredImage: {
+          select: {
+            id: true,
+            filename: true,
+            url: true,
+            thumbnailUrl: true,
+            altText: true,
+          },
+        },
+      },
+    });
+
+    return updated as ContentWithRelations;
+  }
+
+  /**
+   * Unschedule content
+   * Sets status to DRAFT and clears scheduledAt
+   */
+  async unscheduleContent(id: string): Promise<ContentWithRelations> {
+    // Check if content exists
+    const content = await this.prisma.content.findUnique({
+      where: { id },
+    });
+
+    if (!content) {
+      throw new NotFoundException(`Content with ID ${id} not found`);
+    }
+
+    // Check if content is actually scheduled
+    if (content.status !== ContentStatus.SCHEDULED) {
+      throw new BadRequestException(
+        'Content is not scheduled and cannot be unscheduled',
+      );
+    }
+
+    // Update content
+    const updated = await this.prisma.content.update({
+      where: { id },
+      data: {
+        status: ContentStatus.DRAFT,
+        scheduledAt: null,
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+          },
+        },
+        categories: {
+          include: {
+            category: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
+          },
+        },
+        tags: {
+          include: {
+            tag: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
+          },
+        },
+        featuredImage: {
+          select: {
+            id: true,
+            filename: true,
+            url: true,
+            thumbnailUrl: true,
+            altText: true,
+          },
+        },
+      },
+    });
+
+    return updated as ContentWithRelations;
+  }
+
+  /**
+   * Ensure slug is unique by appending suffix if needed
+   */
+  private async ensureUniqueSlug(
+    baseSlug: string,
+    excludeId?: string,
+  ): Promise<string> {
+    let slug = baseSlug;
+    let suffix = 1;
+
+    while (true) {
+      const existing = await this.prisma.content.findUnique({
+        where: { slug },
+      });
+
+      // If no existing content or it's the same content we're updating
+      if (!existing || (excludeId && existing.id === excludeId)) {
+        return slug;
+      }
+
+      // Generate new slug with suffix
+      slug = `${baseSlug}-${suffix}`;
+      suffix++;
+    }
+  }
+}
