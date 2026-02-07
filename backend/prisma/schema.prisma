@@ -12,3 +12,213 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// Enums
+enum UserRole {
+  ADMIN
+  EDITOR
+  AUTHOR
+  SUBSCRIBER
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+  SCHEDULED
+}
+
+enum CommentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SPAM
+}
+
+// Models
+model User {
+  id                String         @id @default(uuid())
+  email             String         @unique
+  password          String
+  firstName         String
+  lastName          String
+  role              UserRole       @default(SUBSCRIBER)
+  avatar            String?
+  isActive          Boolean        @default(true)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  refreshTokens     RefreshToken[]
+  authoredContent   Content[]      @relation("AuthoredContent")
+  uploadedMedia     Media[]
+  comments          Comment[]
+  createdVersions   ContentVersion[]
+  auditLogs         AuditLog[]
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  token     String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  revokedAt DateTime?
+
+  @@index([userId])
+}
+
+model Content {
+  id               String            @id @default(uuid())
+  title            String
+  slug             String            @unique
+  body             String
+  excerpt          String?
+  status           ContentStatus     @default(DRAFT)
+  authorId         String
+  author           User              @relation("AuthoredContent", fields: [authorId], references: [id])
+  featuredImageId  String?
+  featuredImage    Media?            @relation(fields: [featuredImageId], references: [id])
+  publishedAt      DateTime?
+  scheduledAt      DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  versions         ContentVersion[]
+  categories       ContentCategory[]
+  tags             ContentTag[]
+  comments         Comment[]
+  seoMetadata      SeoMetadata?
+  analytics        Analytics[]
+
+  @@index([slug])
+  @@index([status])
+  @@index([authorId])
+}
+
+model ContentVersion {
+  id                String   @id @default(uuid())
+  contentId         String
+  content           Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  title             String
+  body              String
+  versionNumber     Int
+  changeDescription String?
+  createdById       String
+  createdBy         User     @relation(fields: [createdById], references: [id])
+  createdAt         DateTime @default(now())
+
+  @@unique([contentId, versionNumber])
+}
+
+model Category {
+  id          String            @id @default(uuid())
+  name        String
+  slug        String            @unique
+  description String?
+  parentId    String?
+  parent      Category?         @relation("CategoryToCategory", fields: [parentId], references: [id])
+  children    Category[]        @relation("CategoryToCategory")
+  contents    ContentCategory[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+model Tag {
+  id        String       @id @default(uuid())
+  name      String       @unique
+  slug      String       @unique
+  contents  ContentTag[]
+  createdAt DateTime     @default(now())
+}
+
+model ContentCategory {
+  contentId  String
+  content    Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([contentId, categoryId])
+}
+
+model ContentTag {
+  contentId String
+  content   Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  tagId     String
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([contentId, tagId])
+}
+
+model Media {
+  id            String    @id @default(uuid())
+  filename      String
+  originalName  String
+  mimeType      String
+  size          Int
+  url           String
+  thumbnailUrl  String?
+  altText       String?
+  uploadedById  String
+  uploadedBy    User      @relation(fields: [uploadedById], references: [id])
+  createdAt     DateTime  @default(now())
+  featuredIn    Content[]
+}
+
+model Comment {
+  id          String        @id @default(uuid())
+  body        String
+  contentId   String
+  content     Content       @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  authorId    String?
+  author      User?         @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  authorName  String?
+  authorEmail String?
+  parentId    String?
+  parent      Comment?      @relation("CommentToComment", fields: [parentId], references: [id])
+  children    Comment[]     @relation("CommentToComment")
+  status      CommentStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([contentId])
+  @@index([status])
+}
+
+model SeoMetadata {
+  id              String   @id @default(uuid())
+  contentId       String   @unique
+  content         Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  metaTitle       String?
+  metaDescription String?
+  canonicalUrl    String?
+  ogTitle         String?
+  ogDescription   String?
+  ogImage         String?
+  robots          String?
+  structuredData  Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Analytics {
+  id             String   @id @default(uuid())
+  contentId      String
+  content        Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  views          Int      @default(0)
+  uniqueVisitors Int      @default(0)
+  date           DateTime @db.Date
+  createdAt      DateTime @default(now())
+
+  @@unique([contentId, date])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  entity    String
+  entityId  String?
+  details   Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+}
