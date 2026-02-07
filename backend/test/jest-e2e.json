@@ -1,0 +1,16 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": "..",
+  "testEnvironment": "node",
+  "testRegex": ".e2e-spec.ts$",
+  "transform": {
+    "^.+\\.ts$": "ts-jest"
+  },
+  "transformIgnorePatterns": [
+    "node_modules/(?!(uuid)/)"
+  ],
+  "setupFilesAfterEnv": ["<rootDir>/test/setup-e2e.ts"],
+  "moduleNameMapper": {
+    "^@/(.*)$": "<rootDir>/src/$1"
+  }
+}
