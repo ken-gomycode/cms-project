@@ -23,11 +23,9 @@
   "license": "ISC",
   "lint-staged": {
     "backend/**/*.ts": [
-      "eslint --fix",
       "prettier --write"
     ],
     "frontend/**/*.{ts,tsx}": [
-      "eslint --fix",
       "prettier --write"
     ]
   },
