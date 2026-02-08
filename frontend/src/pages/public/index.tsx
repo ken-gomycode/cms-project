@@ -2,6 +2,10 @@
  * Central export for all public pages
  */
 
+// Authentication Pages (Phase 19)
+export { Login } from './Login';
+export { Register } from './Register';
+
 // Home (Phase 28)
 export const Home = () => (
   <div>
@@ -15,21 +19,5 @@ export const ContentDetail = () => (
   <div>
     <h2 className="text-xl font-semibold mb-4">Content Detail</h2>
     <p className="text-gray-600">Content detail page coming in Phase 28...</p>
-  </div>
-);
-
-// Login (Phase 19)
-export const Login = () => (
-  <div>
-    <h2 className="text-xl font-semibold mb-4">Login</h2>
-    <p className="text-gray-600">Login page coming in Phase 19...</p>
-  </div>
-);
-
-// Register (Phase 19)
-export const Register = () => (
-  <div>
-    <h2 className="text-xl font-semibold mb-4">Register</h2>
-    <p className="text-gray-600">Register page coming in Phase 19...</p>
   </div>
 );
