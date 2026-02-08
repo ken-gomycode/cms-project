@@ -1,4 +1,4 @@
-import { User, Content, Category, Tag, Media, Comment } from './entities.types';
+import type { User } from './entities.types';
 import { UserRole, ContentStatus, CommentStatus } from './enums.types';
 
 /**

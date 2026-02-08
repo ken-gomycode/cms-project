@@ -63,7 +63,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
                 ${className}
               `}
               onClick={() => {
-                if (!disabled) {
+                if (!disabled && checkboxId) {
                   const checkbox = document.getElementById(checkboxId) as HTMLInputElement;
                   checkbox?.click();
                 }

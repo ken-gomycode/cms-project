@@ -138,7 +138,7 @@ export interface Comment {
   authorEmail: string;
   status: CommentStatus;
   contentId: string;
-  content?: Content;
+  contentRelation?: Content;
   parentId: string | null;
   parent?: Comment;
   replies?: Comment[];
