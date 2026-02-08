@@ -1,10 +1,7 @@
 import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Media } from '@prisma/client';
-import { promises as fs } from 'fs';
-import * as path from 'path';
-import * as sharp from 'sharp';
-import { v4 as uuidv4 } from 'uuid';
+import { v2 as cloudinary } from 'cloudinary';
 
 import { PaginatedResponseDto } from '../common/dto/paginated-response.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -12,38 +9,47 @@ import { UpdateMediaDto } from './dto/update-media.dto';
 
 @Injectable()
 export class MediaService {
-  private readonly uploadDir: string;
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
   ) {
-    this.uploadDir = this.configService.get<string>('UPLOAD_DIR') || './uploads';
+    // Configure Cloudinary
+    cloudinary.config({
+      cloud_name: this.configService.get<string>('CLOUDINARY_CLOUD_NAME'),
+      api_key: this.configService.get<string>('CLOUDINARY_API_KEY'),
+      api_secret: this.configService.get<string>('CLOUDINARY_API_SECRET'),
+    });
   }
 
   /**
-   * Upload a media file and save metadata to database
-   * Handles image optimization with Sharp if file is an image
+   * Upload a media file to Cloudinary and save metadata to database
+   * Uses Cloudinary transformations for image thumbnails
    */
   async upload(file: Express.Multer.File, uploadedById: string, altText?: string): Promise<Media> {
     try {
-      // Generate unique filename with UUID prefix
-      const fileExtension = path.extname(file.originalname);
-      const filename = `${uuidv4()}${fileExtension}`;
-      const filePath = path.join(this.uploadDir, filename);
+      // Determine resource type for Cloudinary
+      const resourceType = file.mimetype.startsWith('image/')
+        ? 'image'
+        : file.mimetype.startsWith('video/')
+          ? 'video'
+          : 'raw';
 
-      // Save original file
-      await fs.writeFile(filePath, file.buffer);
+      // Upload to Cloudinary
+      const uploadResult = await this.uploadToCloudinary(file.buffer, {
+        folder: 'cms-media',
+        resource_type: resourceType,
+        public_id: `${Date.now()}-${file.originalname.split('.')[0]}`,
+      });
 
-      // Initialize media metadata
-      let url = `/uploads/${filename}`;
+      // Store Cloudinary public_id as filename for later deletion
+      const filename = uploadResult.public_id;
+      const url = uploadResult.secure_url;
+
+      // Generate thumbnail URL using Cloudinary transformations for images
       let thumbnailUrl: string | null = null;
-
-      // Check if file is an image and optimize
       if (file.mimetype.startsWith('image/')) {
-        const optimizedResult = await this.optimizeImage(filename, file.buffer);
-        url = optimizedResult.url;
-        thumbnailUrl = optimizedResult.thumbnailUrl;
+        // Replace /upload/ with /upload/w_300,h_300,c_fill/ for thumbnail
+        thumbnailUrl = url.replace('/upload/', '/upload/w_300,h_300,c_fill/');
       }
 
       // Save metadata to database
@@ -67,46 +73,20 @@ export class MediaService {
   }
 
   /**
-   * Optimize image by creating thumbnail and optimized version
-   * Returns updated URLs
+   * Helper method to upload buffer to Cloudinary using stream
+   * Wraps the stream-based upload in a Promise
    */
-  private async optimizeImage(
-    filename: string,
-    buffer: Buffer,
-  ): Promise<{ url: string; thumbnailUrl: string }> {
-    try {
-      const baseFilename = path.parse(filename).name;
-      const thumbnailFilename = `${baseFilename}-thumb.jpg`;
-      const optimizedFilename = `${baseFilename}-optimized.jpg`;
-
-      const thumbnailPath = path.join(this.uploadDir, thumbnailFilename);
-      const optimizedPath = path.join(this.uploadDir, optimizedFilename);
-
-      // Generate thumbnail: 300x300
-      await sharp(buffer)
-        .resize(300, 300, {
-          fit: 'cover',
-          position: 'center',
-        })
-        .jpeg({ quality: 80 })
-        .toFile(thumbnailPath);
-
-      // Generate optimized version: max 1920px width/height, quality 80
-      await sharp(buffer)
-        .resize(1920, 1920, {
-          fit: 'inside',
-          withoutEnlargement: true,
-        })
-        .jpeg({ quality: 80 })
-        .toFile(optimizedPath);
-
-      return {
-        url: `/uploads/${optimizedFilename}`,
-        thumbnailUrl: `/uploads/${thumbnailFilename}`,
-      };
-    } catch (error) {
-      throw new InternalServerErrorException(`Failed to optimize image: ${error.message}`);
-    }
+  private uploadToCloudinary(buffer: Buffer, options: any): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(options, (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result);
+        }
+      });
+      stream.end(buffer);
+    });
   }
 
   /**
@@ -205,32 +185,23 @@ export class MediaService {
   }
 
   /**
-   * Remove media from database and delete files from filesystem
+   * Remove media from Cloudinary and delete from database
    */
   async remove(id: string): Promise<Media> {
     const media = await this.findOne(id);
 
     try {
-      // Delete files from filesystem
-      const filesToDelete: string[] = [path.join(this.uploadDir, media.filename)];
+      // Delete from Cloudinary using the public_id stored in filename field
+      // Determine resource type for deletion
+      const resourceType = media.mimeType.startsWith('image/')
+        ? 'image'
+        : media.mimeType.startsWith('video/')
+          ? 'video'
+          : 'raw';
 
-      // If image, also delete optimized and thumbnail versions
-      if (media.mimeType.startsWith('image/')) {
-        const baseFilename = path.parse(media.filename).name;
-        filesToDelete.push(
-          path.join(this.uploadDir, `${baseFilename}-optimized.jpg`),
-          path.join(this.uploadDir, `${baseFilename}-thumb.jpg`),
-        );
-      }
-
-      // Delete files (ignore errors if files don't exist)
-      await Promise.allSettled(
-        filesToDelete.map((filePath) =>
-          fs.unlink(filePath).catch(() => {
-            // File might not exist, ignore error
-          }),
-        ),
-      );
+      await cloudinary.uploader.destroy(media.filename, {
+        resource_type: resourceType,
+      });
 
       // Delete from database
       const deletedMedia = await this.prisma.media.delete({
