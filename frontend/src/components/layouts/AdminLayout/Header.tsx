@@ -48,11 +48,13 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
             <Menu.Button className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors">
               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-sm">
                 <span className="text-white font-semibold text-sm">
-                  {user.name?.charAt(0).toUpperCase() || user.email.charAt(0).toUpperCase()}
+                  {user.firstName?.charAt(0).toUpperCase() || user.email.charAt(0).toUpperCase()}
                 </span>
               </div>
               <div className="hidden sm:block text-left">
-                <p className="text-sm font-medium text-gray-900">{user.name || 'User'}</p>
+                <p className="text-sm font-medium text-gray-900">
+                  {user.firstName ? `${user.firstName} ${user.lastName}` : 'User'}
+                </p>
                 <p className="text-xs text-gray-500">{user.role}</p>
               </div>
             </Menu.Button>

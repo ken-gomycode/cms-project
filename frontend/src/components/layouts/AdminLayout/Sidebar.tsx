@@ -98,12 +98,12 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-50">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-sm">
                 <span className="text-white font-semibold text-sm">
-                  {user.name?.charAt(0).toUpperCase() || user.email.charAt(0).toUpperCase()}
+                  {user.firstName?.charAt(0).toUpperCase() || user.email.charAt(0).toUpperCase()}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">
-                  {user.name || user.email}
+                  {user.firstName ? `${user.firstName} ${user.lastName}` : user.email}
                 </p>
                 <Badge status={user.role as any} className="mt-0.5" />
               </div>

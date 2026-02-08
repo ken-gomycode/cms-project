@@ -64,8 +64,15 @@ export const Badge = ({ status, className = '' }: BadgeProps) => {
       bgColor: 'bg-primary-50',
       borderColor: 'border-primary-200',
     },
-    VIEWER: {
-      label: 'Viewer',
+    EDITOR: {
+      label: 'Editor',
+      dotColor: 'bg-success-500',
+      textColor: 'text-success-700',
+      bgColor: 'bg-success-50',
+      borderColor: 'border-success-200',
+    },
+    SUBSCRIBER: {
+      label: 'Subscriber',
       dotColor: 'bg-gray-500',
       textColor: 'text-gray-700',
       bgColor: 'bg-gray-50',

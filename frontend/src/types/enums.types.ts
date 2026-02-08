@@ -3,8 +3,9 @@
  */
 export enum UserRole {
   ADMIN = 'ADMIN',
+  EDITOR = 'EDITOR',
   AUTHOR = 'AUTHOR',
-  VIEWER = 'VIEWER',
+  SUBSCRIBER = 'SUBSCRIBER',
 }
 
 /**

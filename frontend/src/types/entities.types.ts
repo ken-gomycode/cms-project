@@ -6,11 +6,10 @@ import { UserRole, ContentStatus, CommentStatus } from './enums.types';
 export interface User {
   id: string;
   email: string;
-  name: string | null;
-  password: string;
+  firstName: string;
+  lastName: string;
   role: UserRole;
   avatar: string | null;
-  bio: string | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -22,10 +21,10 @@ export interface User {
 export interface PublicUser {
   id: string;
   email: string;
-  name: string | null;
+  firstName: string;
+  lastName: string;
   role: UserRole;
   avatar: string | null;
-  bio: string | null;
   createdAt: string;
   updatedAt: string;
 }
