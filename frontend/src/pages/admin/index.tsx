@@ -4,14 +4,8 @@
 
 export { Dashboard } from './Dashboard';
 export { ContentList } from './ContentList';
-
-// Media Management (Phase 22)
-export const MediaLibrary = () => (
-  <div>
-    <h2 className="text-xl font-semibold mb-4">Media Library</h2>
-    <p className="text-gray-600">Media library coming in Phase 22...</p>
-  </div>
-);
+export { ContentEditor } from './ContentEditor';
+export { MediaLibrary } from './MediaLibrary';
 
 // Comment Moderation (Phase 24)
 export const CommentModeration = () => (
@@ -21,13 +15,7 @@ export const CommentModeration = () => (
   </div>
 );
 
-// Categories (Phase 23)
-export const Categories = () => (
-  <div>
-    <h2 className="text-xl font-semibold mb-4">Categories</h2>
-    <p className="text-gray-600">Category management coming in Phase 23...</p>
-  </div>
-);
+export { Categories } from './Categories';
 
 // Tags (Phase 23)
 export const Tags = () => (

@@ -12,3 +12,4 @@ export * from './ConfirmDialog';
 export * from './Toast';
 export * from './Spinner';
 export * from './Badge';
+export * from './DataTable';
