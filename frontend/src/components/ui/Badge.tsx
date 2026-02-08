@@ -2,7 +2,7 @@ import { ContentStatus } from '@/types';
 
 export interface BadgeProps {
   /** Status variant */
-  status: ContentStatus;
+  status: ContentStatus | string;
   /** Optional className */
   className?: string;
 }
@@ -18,7 +18,7 @@ export interface BadgeProps {
  */
 export const Badge = ({ status, className = '' }: BadgeProps) => {
   const config: Record<
-    ContentStatus,
+    string,
     { label: string; dotColor: string; textColor: string; bgColor: string; borderColor: string }
   > = {
     [ContentStatus.DRAFT]: {
@@ -49,9 +49,32 @@ export const Badge = ({ status, className = '' }: BadgeProps) => {
       bgColor: 'bg-primary-50',
       borderColor: 'border-primary-200',
     },
+    // Support for UserRole badges
+    ADMIN: {
+      label: 'Admin',
+      dotColor: 'bg-error-500',
+      textColor: 'text-error-700',
+      bgColor: 'bg-error-50',
+      borderColor: 'border-error-200',
+    },
+    AUTHOR: {
+      label: 'Author',
+      dotColor: 'bg-primary-500',
+      textColor: 'text-primary-700',
+      bgColor: 'bg-primary-50',
+      borderColor: 'border-primary-200',
+    },
+    VIEWER: {
+      label: 'Viewer',
+      dotColor: 'bg-gray-500',
+      textColor: 'text-gray-700',
+      bgColor: 'bg-gray-50',
+      borderColor: 'border-gray-200',
+    },
   };
 
-  const { label, dotColor, textColor, bgColor, borderColor } = config[status];
+  const badgeConfig = config[status] || config[ContentStatus.DRAFT];
+  const { label, dotColor, textColor, bgColor, borderColor } = badgeConfig;
 
   return (
     <span

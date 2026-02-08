@@ -1,2 +1,135 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
+
+@theme {
+  /* Primary blue colors (50-950 scale) */
+  --color-primary-50: oklch(0.97 0.01 250);
+  --color-primary-100: oklch(0.93 0.03 250);
+  --color-primary-200: oklch(0.86 0.06 250);
+  --color-primary-300: oklch(0.76 0.10 250);
+  --color-primary-400: oklch(0.66 0.14 250);
+  --color-primary-500: oklch(0.57 0.17 250);
+  --color-primary-600: oklch(0.48 0.17 250);
+  --color-primary-700: oklch(0.41 0.15 250);
+  --color-primary-800: oklch(0.35 0.12 250);
+  --color-primary-900: oklch(0.30 0.09 250);
+  --color-primary-950: oklch(0.22 0.06 250);
+
+  /* Success colors (green) */
+  --color-success-50: oklch(0.97 0.02 145);
+  --color-success-100: oklch(0.93 0.06 145);
+  --color-success-200: oklch(0.88 0.12 145);
+  --color-success-300: oklch(0.80 0.18 145);
+  --color-success-400: oklch(0.71 0.20 145);
+  --color-success-500: oklch(0.64 0.20 145);
+  --color-success-600: oklch(0.55 0.18 145);
+  --color-success-700: oklch(0.48 0.15 145);
+  --color-success-800: oklch(0.42 0.12 145);
+  --color-success-900: oklch(0.37 0.10 145);
+
+  /* Warning colors (amber/yellow) */
+  --color-warning-50: oklch(0.99 0.01 85);
+  --color-warning-100: oklch(0.97 0.04 85);
+  --color-warning-200: oklch(0.94 0.09 85);
+  --color-warning-300: oklch(0.90 0.14 85);
+  --color-warning-400: oklch(0.85 0.16 85);
+  --color-warning-500: oklch(0.75 0.15 85);
+  --color-warning-600: oklch(0.65 0.14 85);
+  --color-warning-700: oklch(0.52 0.12 85);
+  --color-warning-800: oklch(0.46 0.10 85);
+  --color-warning-900: oklch(0.40 0.08 85);
+
+  /* Error colors (red) */
+  --color-error-50: oklch(0.97 0.01 25);
+  --color-error-100: oklch(0.94 0.04 25);
+  --color-error-200: oklch(0.90 0.08 25);
+  --color-error-300: oklch(0.83 0.13 25);
+  --color-error-400: oklch(0.73 0.18 25);
+  --color-error-500: oklch(0.63 0.20 25);
+  --color-error-600: oklch(0.55 0.20 25);
+  --color-error-700: oklch(0.47 0.17 25);
+  --color-error-800: oklch(0.42 0.14 25);
+  --color-error-900: oklch(0.37 0.11 25);
+
+  /* Extended spacing */
+  --spacing-72: 18rem;
+  --spacing-84: 21rem;
+  --spacing-96: 24rem;
+
+  /* Custom shadows */
+  --shadow-soft: 0 2px 8px 0 rgb(0 0 0 / 0.06);
+  --shadow-medium: 0 4px 12px 0 rgb(0 0 0 / 0.08);
+  --shadow-large: 0 8px 24px 0 rgb(0 0 0 / 0.12);
+
+  /* Font family */
+  --font-sans: "Inter", system-ui, sans-serif;
+
+  /* Custom animations */
+  --animate-fade-in: fadeIn 0.2s ease-in;
+  --animate-slide-in: slideIn 0.3s ease-out;
+  --animate-scale-in: scaleIn 0.2s ease-out;
+}
+
+/* Keyframe animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Custom utility classes */
+.animate-in {
+  animation: var(--animate-fade-in);
+}
+
+.animate-in-slide {
+  animation: var(--animate-slide-in);
+}
+
+.animate-in-scale {
+  animation: var(--animate-scale-in);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 0.5rem;
+  height: 0.5rem;
+}
+
+::-webkit-scrollbar-track {
+  background-color: rgb(243 244 246);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgb(209 213 219);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(156 163 175);
+}
