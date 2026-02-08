@@ -8,6 +8,7 @@ import { ProtectedRoute } from '@/components/common/ProtectedRoute';
 import { PublicRoute } from '@/components/common/PublicRoute';
 import { AdminLayout } from '@/components/layouts/AdminLayout';
 import { PublicLayout } from '@/components/layouts/PublicLayout';
+import { ToastContainer } from '@/components/ui';
 import { UserRole } from '@/types';
 
 // Admin pages
@@ -98,6 +99,9 @@ function App() {
 
       {/* React Query DevTools (development only) */}
       {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+
+      {/* Toast notifications */}
+      <ToastContainer />
     </QueryClientProvider>
   );
 }
