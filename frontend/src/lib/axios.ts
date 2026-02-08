@@ -21,6 +21,22 @@ let failedQueue: Array<{
 }> = [];
 
 /**
+ * Clear auth data from localStorage and update Zustand store.
+ * Does NOT do a hard redirect — lets React auth guards handle navigation.
+ */
+const clearAuth = () => {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('user');
+
+  // Dynamically import to avoid circular dependency, then call logout
+  // This updates Zustand state so AuthGuard re-renders and redirects
+  import('@/stores/authStore').then(({ useAuthStore }) => {
+    useAuthStore.getState().logout();
+  });
+};
+
+/**
  * Process queued requests after token refresh
  */
 const processQueue = (error: Error | null = null) => {
@@ -54,10 +70,24 @@ axiosInstance.interceptors.request.use(
 );
 
 /**
- * Response interceptor: Handle 401 errors and token refresh
+ * Response interceptor: Unwrap backend envelope + handle 401 errors and token refresh
+ *
+ * The backend wraps all responses in { data, statusCode, timestamp }.
+ * This interceptor unwraps it so `response.data` gives the actual payload.
  */
 axiosInstance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Unwrap the backend's { data, statusCode, timestamp } envelope
+    if (
+      response.data &&
+      typeof response.data === 'object' &&
+      'data' in response.data &&
+      'statusCode' in response.data
+    ) {
+      response.data = response.data.data;
+    }
+    return response;
+  },
   async (error: AxiosError) => {
     const originalRequest = error.config as AxiosRequestConfig & {
       _retry?: boolean;
@@ -68,15 +98,17 @@ axiosInstance.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // If token refresh endpoint fails, logout and redirect
-    if (originalRequest.url?.includes('/auth/refresh')) {
-      // Clear all auth data
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
+    // Don't attempt token refresh for auth endpoints (login, register)
+    if (
+      originalRequest.url?.includes('/auth/login') ||
+      originalRequest.url?.includes('/auth/register')
+    ) {
+      return Promise.reject(error);
+    }
 
-      // Redirect to login
-      window.location.href = '/login';
+    // If token refresh endpoint fails, clear auth and let guards redirect
+    if (originalRequest.url?.includes('/auth/refresh')) {
+      clearAuth();
       return Promise.reject(error);
     }
 
@@ -99,11 +131,8 @@ axiosInstance.interceptors.response.use(
     const refreshToken = localStorage.getItem('refreshToken');
 
     if (!refreshToken) {
-      // No refresh token, logout
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      isRefreshing = false;
+      clearAuth();
       return Promise.reject(error);
     }
 
@@ -125,12 +154,9 @@ axiosInstance.interceptors.response.use(
       // Retry original request with new token
       return axiosInstance(originalRequest);
     } catch (refreshError) {
-      // Refresh failed, logout
+      // Refresh failed, clear auth and let guards redirect
       processQueue(refreshError as Error);
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      clearAuth();
       return Promise.reject(refreshError);
     } finally {
       isRefreshing = false;

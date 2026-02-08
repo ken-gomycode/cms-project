@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import * as cookieParser from 'cookie-parser';
-import * as csurf from 'csurf';
+
 import helmet from 'helmet';
 import { join } from 'path';
 
@@ -49,32 +49,14 @@ async function bootstrap() {
     origin: frontendUrl,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   // Security: Cookie Parser (required for CSRF)
   app.use(cookieParser());
 
-  // Security: CSRF Protection
-  app.use(
-    csurf({
-      cookie: {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-      },
-    }),
-  );
-
-  // Middleware to set CSRF token in cookie for client
-  app.use((req: any, res: any, next: any) => {
-    res.cookie('XSRF-TOKEN', req.csrfToken(), {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-    });
-    next();
-  });
+  // Note: CSRF protection removed - not needed for JWT-based APIs
+  // JWT tokens in Authorization headers are inherently immune to CSRF attacks
 
   // Configure static file serving for uploads
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {

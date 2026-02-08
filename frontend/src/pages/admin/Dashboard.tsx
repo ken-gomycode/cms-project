@@ -403,7 +403,7 @@ export const Dashboard = () => {
                     </div>
 
                     <p className="text-gray-700 text-sm mb-4 leading-relaxed">
-                      {truncateText(comment.content, 120)}
+                      {truncateText(comment.body, 120)}
                     </p>
 
                     <div className="flex items-center gap-3">
