@@ -4,8 +4,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { queryClient } from '@/lib/queryClient';
 import { useAuthStore } from '@/stores/authStore';
-import { ProtectedRoute } from '@/components/common/ProtectedRoute';
-import { PublicRoute } from '@/components/common/PublicRoute';
+import { ProtectedRoute } from '@/components/guards';
 import { AdminLayout } from '@/components/layouts/AdminLayout';
 import { PublicLayout } from '@/components/layouts/PublicLayout';
 import { ToastContainer } from '@/components/ui';
@@ -45,23 +44,9 @@ function App() {
             <Route path="/content/:slug" element={<ContentDetail />} />
           </Route>
 
-          {/* Public auth routes (redirect if authenticated) */}
-          <Route
-            path="/login"
-            element={
-              <PublicRoute>
-                <Login />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/register"
-            element={
-              <PublicRoute>
-                <Register />
-              </PublicRoute>
-            }
-          />
+          {/* Public auth routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
           {/* Protected admin routes */}
           <Route
