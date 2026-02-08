@@ -142,6 +142,7 @@ export interface CreateCategoryRequest {
   name: string;
   slug?: string;
   description?: string;
+  parentId?: string;
 }
 
 /**
@@ -166,9 +167,9 @@ export interface UpdateTagRequest extends Partial<CreateTagRequest> {}
  * Create comment request
  */
 export interface CreateCommentRequest {
-  content: string;
-  authorName: string;
-  authorEmail: string;
+  body: string;
+  authorName?: string;
+  authorEmail?: string;
   contentId: string;
   parentId?: string;
 }
@@ -177,8 +178,23 @@ export interface CreateCommentRequest {
  * Update comment request
  */
 export interface UpdateCommentRequest {
-  content?: string;
+  body?: string;
   status?: CommentStatus;
+}
+
+/**
+ * Moderate comment request
+ */
+export interface ModerateCommentRequest {
+  status: CommentStatus.APPROVED | CommentStatus.REJECTED | CommentStatus.SPAM;
+}
+
+/**
+ * Batch moderate comments request
+ */
+export interface BatchModerateCommentsRequest {
+  commentIds: string[];
+  status: CommentStatus.APPROVED | CommentStatus.REJECTED | CommentStatus.SPAM;
 }
 
 /**

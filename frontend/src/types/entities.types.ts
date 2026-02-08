@@ -37,6 +37,9 @@ export interface Category {
   name: string;
   slug: string;
   description: string | null;
+  parentId: string | null;
+  parent?: Category;
+  children?: Category[];
   createdAt: string;
   updatedAt: string;
   _count?: {
@@ -132,9 +135,11 @@ export interface Content {
  */
 export interface Comment {
   id: string;
-  content: string;
-  authorName: string;
-  authorEmail: string;
+  body: string;
+  authorId: string | null;
+  author?: PublicUser;
+  authorName: string | null;
+  authorEmail: string | null;
   status: CommentStatus;
   contentId: string;
   contentRelation?: Content;

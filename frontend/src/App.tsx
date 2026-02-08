@@ -14,6 +14,7 @@ import { UserRole } from '@/types';
 import {
   Dashboard,
   ContentList,
+  ContentEditor,
   MediaLibrary,
   CommentModeration,
   Categories,
@@ -59,6 +60,8 @@ function App() {
           >
             <Route index element={<Dashboard />} />
             <Route path="content" element={<ContentList />} />
+            <Route path="content/new" element={<ContentEditor />} />
+            <Route path="content/:id/edit" element={<ContentEditor />} />
             <Route path="media" element={<MediaLibrary />} />
             <Route path="comments" element={<CommentModeration />} />
             <Route path="categories" element={<Categories />} />
