@@ -5,3 +5,4 @@
 export * from './useAuth';
 export * from './useUsers';
 export * from './useContent';
+export * from './useDashboard';

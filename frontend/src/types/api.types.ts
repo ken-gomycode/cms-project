@@ -224,6 +224,35 @@ export interface UpdateMediaRequest {
 }
 
 /**
+ * Dashboard statistics response
+ */
+export interface DashboardStats {
+  contentByStatus: Record<ContentStatus, number>;
+  contentByRole: Record<string, number>;
+  views: {
+    last30Days: { total: number; unique: number };
+    allTime: { total: number; unique: number };
+  };
+  totalContent: number;
+}
+
+/**
+ * Top content item for dashboard
+ */
+export interface TopContentItem {
+  content: {
+    id: string;
+    title: string;
+    slug: string;
+    status: ContentStatus;
+    publishedAt: string | null;
+    author: { id: string; firstName: string; lastName: string; email: string };
+  };
+  views: number;
+  uniqueVisitors: number;
+}
+
+/**
  * Error response
  */
 export interface ErrorResponse {
