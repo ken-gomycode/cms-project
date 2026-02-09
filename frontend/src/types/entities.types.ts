@@ -90,15 +90,12 @@ export interface SeoMetadata {
   contentId: string;
   metaTitle: string | null;
   metaDescription: string | null;
-  metaKeywords: string | null;
+  canonicalUrl: string | null;
   ogTitle: string | null;
   ogDescription: string | null;
   ogImage: string | null;
-  twitterCard: string | null;
-  twitterTitle: string | null;
-  twitterDescription: string | null;
-  twitterImage: string | null;
-  canonicalUrl: string | null;
+  robots: string | null;
+  structuredData: any | null;
   createdAt: string;
   updatedAt: string;
 }

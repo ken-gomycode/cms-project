@@ -19,6 +19,7 @@ import {
   CommentModeration,
   Categories,
   Tags,
+  SeoManagement,
   Users,
   Analytics,
   Profile,
@@ -66,6 +67,7 @@ function App() {
             <Route path="comments" element={<CommentModeration />} />
             <Route path="categories" element={<Categories />} />
             <Route path="tags" element={<Tags />} />
+            <Route path="seo" element={<SeoManagement />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="profile" element={<Profile />} />
 

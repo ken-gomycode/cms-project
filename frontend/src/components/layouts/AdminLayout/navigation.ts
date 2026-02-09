@@ -5,6 +5,7 @@ import {
   MessageSquare,
   Folder,
   Tag,
+  Search,
   BarChart3,
   Users,
   User,
@@ -50,6 +51,11 @@ export const navigationItems: NavigationItem[] = [
     name: 'Tags',
     path: '/admin/tags',
     icon: Tag,
+  },
+  {
+    name: 'SEO',
+    path: '/admin/seo',
+    icon: Search,
   },
   {
     name: 'Analytics',

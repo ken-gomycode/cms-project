@@ -86,4 +86,11 @@ export const queryKeys = {
     lists: () => [...queryKeys.auditLogs.all, 'list'] as const,
     list: (filters: FilterParams) => [...queryKeys.auditLogs.lists(), filters] as const,
   },
+
+  // SEO
+  seo: {
+    all: ['seo'] as const,
+    details: () => [...queryKeys.seo.all, 'detail'] as const,
+    detail: (contentId: string) => [...queryKeys.seo.details(), contentId] as const,
+  },
 };
