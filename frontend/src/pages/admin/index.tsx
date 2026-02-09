@@ -14,12 +14,7 @@ export { SeoManagement } from './SeoManagement';
 export { UserManagement as Users } from './UserManagement';
 
 // Analytics (Phase 27)
-export const Analytics = () => (
-  <div>
-    <h2 className="text-xl font-semibold mb-4">Analytics</h2>
-    <p className="text-gray-600">Analytics coming in Phase 27...</p>
-  </div>
-);
+export { AnalyticsDashboard as Analytics } from './AnalyticsDashboard';
 
 // Profile (Phase 19)
 export const Profile = () => (

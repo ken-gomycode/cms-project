@@ -11,3 +11,4 @@ export * from './useDashboard';
 export * from './useMedia';
 export * from './useComments';
 export * from './useSeo';
+export * from './useAnalytics';
