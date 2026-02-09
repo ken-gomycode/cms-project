@@ -10,6 +10,14 @@ import {
   Put,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { SeoMetadata, UserRole } from '@prisma/client';
 
 import { CurrentUser, CurrentUserType } from '../auth/decorators/current-user.decorator';
@@ -28,6 +36,7 @@ import { SeoService } from './seo.service';
  * Manages SEO metadata for content with role-based access control
  * Provides SEO analysis and scoring functionality
  */
+@ApiTags('seo')
 @Controller('content/:contentId/seo')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class SeoController {
@@ -41,6 +50,18 @@ export class SeoController {
    * Create or update SEO metadata for content
    * Protected: Editor+ roles or content owner
    */
+  @ApiOperation({
+    summary: 'Create/update SEO metadata',
+    description:
+      'Create or update SEO metadata for content. Must be content owner or have EDITOR/ADMIN role.',
+  })
+  @ApiParam({ name: 'contentId', description: 'Content UUID' })
+  @ApiBody({ type: CreateSeoDto })
+  @ApiResponse({ status: 200, description: 'SEO metadata saved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Content not found' })
+  @ApiBearerAuth('JWT-auth')
   @Put()
   @Roles(UserRole.AUTHOR, UserRole.EDITOR, UserRole.ADMIN)
   async createOrUpdate(
@@ -58,6 +79,13 @@ export class SeoController {
    * Get SEO metadata for content
    * Public endpoint - accessible to all
    */
+  @ApiOperation({
+    summary: 'Get SEO metadata',
+    description: 'Retrieve SEO metadata for content. Public endpoint.',
+  })
+  @ApiParam({ name: 'contentId', description: 'Content UUID' })
+  @ApiResponse({ status: 200, description: 'SEO metadata retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'SEO metadata not found' })
   @Get()
   @Public()
   async findByContentId(@Param('contentId') contentId: string): Promise<SeoMetadata> {
@@ -68,6 +96,17 @@ export class SeoController {
    * Delete SEO metadata for content
    * Protected: Editor+ roles or content owner
    */
+  @ApiOperation({
+    summary: 'Delete SEO metadata',
+    description:
+      'Delete SEO metadata for content. Must be content owner or have EDITOR/ADMIN role.',
+  })
+  @ApiParam({ name: 'contentId', description: 'Content UUID' })
+  @ApiResponse({ status: 200, description: 'SEO metadata deleted successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Content not found' })
+  @ApiBearerAuth('JWT-auth')
   @Delete()
   @Roles(UserRole.AUTHOR, UserRole.EDITOR, UserRole.ADMIN)
   async remove(
@@ -87,6 +126,15 @@ export class SeoController {
    * Protected: Any authenticated user can analyze
    * Returns SEO score and detailed check results
    */
+  @ApiOperation({
+    summary: 'Analyze SEO',
+    description: 'Analyze SEO quality and get score with recommendations. Requires authentication.',
+  })
+  @ApiParam({ name: 'contentId', description: 'Content UUID' })
+  @ApiResponse({ status: 200, description: 'SEO analysis completed successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Content not found' })
+  @ApiBearerAuth('JWT-auth')
   @Post('analyze')
   @Roles(UserRole.AUTHOR, UserRole.EDITOR, UserRole.ADMIN, UserRole.SUBSCRIBER)
   async analyze(@Param('contentId') contentId: string): Promise<SeoScoreDto> {

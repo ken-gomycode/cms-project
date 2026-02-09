@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum } from 'class-validator';
 import { CommentStatus } from '@prisma/client';
 
@@ -6,6 +7,11 @@ import { CommentStatus } from '@prisma/client';
  * Allows changing comment status (PENDING, APPROVED, REJECTED, SPAM)
  */
 export class ModerateCommentDto {
+  @ApiProperty({
+    description: 'Comment moderation status',
+    enum: CommentStatus,
+    example: CommentStatus.APPROVED,
+  })
   @IsEnum(CommentStatus)
   status: CommentStatus;
 }

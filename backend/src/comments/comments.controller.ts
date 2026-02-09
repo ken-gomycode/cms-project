@@ -9,6 +9,14 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 
 import { CurrentUser, CurrentUserType } from '../auth/decorators/current-user.decorator';
@@ -43,6 +51,7 @@ class OptionalJwtAuthGuard extends AuthGuard('jwt') {
  * Handles all comment-related endpoints
  * Supports both authenticated and guest comments
  */
+@ApiTags('comments')
 @Controller('comments')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class CommentsController {
@@ -53,6 +62,13 @@ export class CommentsController {
    * - Public: Guest users can comment with name/email
    * - Protected: Authenticated users comment with their account
    */
+  @ApiOperation({
+    summary: 'Create comment',
+    description: 'Create a new comment. Supports both authenticated and guest users.',
+  })
+  @ApiBody({ type: CreateCommentDto })
+  @ApiResponse({ status: 201, description: 'Comment created successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @Public()
   @UseGuards(OptionalJwtAuthGuard)
@@ -66,6 +82,12 @@ export class CommentsController {
    * - Unauthenticated: see APPROVED comments only
    * - Editor+: see all comments
    */
+  @ApiOperation({
+    summary: 'Get comments for content',
+    description: 'Get all comments for specific content. Returns nested comment tree.',
+  })
+  @ApiParam({ name: 'contentId', description: 'Content UUID' })
+  @ApiResponse({ status: 200, description: 'Comments retrieved successfully' })
   @Get('content/:contentId')
   @Public()
   @UseGuards(OptionalJwtAuthGuard)
@@ -88,6 +110,14 @@ export class CommentsController {
    * Get all comments (Editor+ only)
    * Returns paginated list of all comments regardless of status
    */
+  @ApiOperation({
+    summary: 'Get all comments',
+    description: 'Get all comments. Requires AUTHOR, EDITOR, or ADMIN role.',
+  })
+  @ApiResponse({ status: 200, description: 'Comments retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiBearerAuth('JWT-auth')
   @Get()
   @Roles(UserRole.ADMIN, UserRole.EDITOR, UserRole.AUTHOR)
   findAll(@Query() pagination: PaginationQueryDto) {
@@ -103,6 +133,14 @@ export class CommentsController {
    * Get all pending comments (Editor+ only)
    * Returns paginated list of comments awaiting moderation
    */
+  @ApiOperation({
+    summary: 'Get pending comments',
+    description: 'Get all pending comments awaiting moderation.',
+  })
+  @ApiResponse({ status: 200, description: 'Pending comments retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiBearerAuth('JWT-auth')
   @Get('pending')
   @Roles(UserRole.ADMIN, UserRole.EDITOR, UserRole.AUTHOR)
   findAllPending(@Query() pagination: PaginationQueryDto) {
@@ -115,6 +153,13 @@ export class CommentsController {
   /**
    * Get single comment by ID
    */
+  @ApiOperation({
+    summary: 'Get comment by ID',
+    description: 'Retrieve a single comment by its UUID.',
+  })
+  @ApiParam({ name: 'id', description: 'Comment UUID' })
+  @ApiResponse({ status: 200, description: 'Comment retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Comment not found' })
   @Get(':id')
   @Public()
   findOne(@Param('id') id: string) {
@@ -125,6 +170,14 @@ export class CommentsController {
    * Moderate a single comment (Editor+ only)
    * Updates comment status
    */
+  @ApiOperation({ summary: 'Moderate comment', description: 'Update comment moderation status.' })
+  @ApiParam({ name: 'id', description: 'Comment UUID' })
+  @ApiBody({ type: ModerateCommentDto })
+  @ApiResponse({ status: 200, description: 'Comment moderated successfully' })
+  @ApiResponse({ status: 404, description: 'Comment not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiBearerAuth('JWT-auth')
   @Patch(':id/moderate')
   @Roles(UserRole.ADMIN, UserRole.EDITOR, UserRole.AUTHOR)
   moderate(@Param('id') id: string, @Body() moderateCommentDto: ModerateCommentDto) {
@@ -135,6 +188,15 @@ export class CommentsController {
    * Moderate multiple comments in batch (Editor+ only)
    * Updates status for all provided comment IDs
    */
+  @ApiOperation({
+    summary: 'Batch moderate comments',
+    description: 'Moderate multiple comments in batch.',
+  })
+  @ApiBody({ type: BatchModerateDto })
+  @ApiResponse({ status: 200, description: 'Comments moderated successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiBearerAuth('JWT-auth')
   @Patch('batch-moderate')
   @Roles(UserRole.ADMIN, UserRole.EDITOR, UserRole.AUTHOR)
   moderateBatch(@Body() batchModerateDto: BatchModerateDto) {
@@ -145,6 +207,16 @@ export class CommentsController {
    * Delete comment (Admin only)
    * Cascades to all child comments
    */
+  @ApiOperation({
+    summary: 'Delete comment',
+    description: 'Delete a comment and all its children. Requires ADMIN role.',
+  })
+  @ApiParam({ name: 'id', description: 'Comment UUID' })
+  @ApiResponse({ status: 200, description: 'Comment deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Comment not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiBearerAuth('JWT-auth')
   @Delete(':id')
   @Roles(UserRole.ADMIN)
   remove(@Param('id') id: string) {

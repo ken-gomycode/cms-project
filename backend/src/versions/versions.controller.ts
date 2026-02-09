@@ -8,6 +8,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 
 import { CurrentUser, CurrentUserType } from '../auth/decorators/current-user.decorator';
@@ -24,6 +25,8 @@ import { VersionsService, VersionWithRelations } from './versions.service';
  * Manages content version history, comparison, and rollback operations
  * All endpoints are protected and require authentication
  */
+@ApiTags('versions')
+@ApiBearerAuth('JWT-auth')
 @Controller('content/:contentId/versions')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class VersionsController {
@@ -37,6 +40,13 @@ export class VersionsController {
    * Protected - requires authentication
    * Returns paginated list of versions ordered by versionNumber DESC
    */
+  @ApiOperation({
+    summary: 'Get content versions',
+    description: 'Retrieve all versions for content with pagination. Requires authentication.',
+  })
+  @ApiParam({ name: 'contentId', description: 'Content UUID' })
+  @ApiResponse({ status: 200, description: 'Versions retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   @Get()
   async findAll(
     @Param('contentId') contentId: string,
@@ -54,6 +64,15 @@ export class VersionsController {
    * Protected - requires authentication
    * Returns version with content and createdBy relations
    */
+  @ApiOperation({
+    summary: 'Get version by ID',
+    description: 'Retrieve a specific version by ID. Requires authentication.',
+  })
+  @ApiParam({ name: 'contentId', description: 'Content UUID' })
+  @ApiParam({ name: 'versionId', description: 'Version UUID' })
+  @ApiResponse({ status: 200, description: 'Version retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Version not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   @Get(':versionId')
   async findOne(
     @Param('contentId') contentId: string,
@@ -74,6 +93,14 @@ export class VersionsController {
    * Protected - requires authentication
    * Returns both version objects for frontend diff rendering
    */
+  @ApiOperation({
+    summary: 'Compare versions',
+    description: 'Compare two versions of the same content. Requires authentication.',
+  })
+  @ApiParam({ name: 'contentId', description: 'Content UUID' })
+  @ApiResponse({ status: 200, description: 'Versions compared successfully' })
+  @ApiResponse({ status: 404, description: 'Version not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   @Get('compare')
   async compareVersions(
     @Param('contentId') contentId: string,
@@ -87,6 +114,17 @@ export class VersionsController {
    * Protected - requires Editor+ role or content ownership
    * Creates new version and updates content
    */
+  @ApiOperation({
+    summary: 'Rollback to version',
+    description:
+      'Rollback content to a specific version. Must be content owner or have EDITOR/ADMIN role.',
+  })
+  @ApiParam({ name: 'contentId', description: 'Content UUID' })
+  @ApiParam({ name: 'versionNumber', description: 'Version number to rollback to' })
+  @ApiResponse({ status: 200, description: 'Content rolled back successfully' })
+  @ApiResponse({ status: 404, description: 'Version not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @Post(':versionNumber/rollback')
   async rollback(
     @Param('contentId') contentId: string,

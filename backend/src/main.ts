@@ -2,6 +2,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as cookieParser from 'cookie-parser';
 
 import helmet from 'helmet';
@@ -61,6 +62,45 @@ async function bootstrap() {
   // Configure static file serving for uploads
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads',
+  });
+
+  // Swagger API Documentation
+  const config = new DocumentBuilder()
+    .setTitle('CMS API')
+    .setDescription('Content Management System REST API Documentation')
+    .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: 'Enter JWT token',
+        name: 'Authorization',
+        in: 'header',
+      },
+      'JWT-auth',
+    )
+    .addTag('auth', 'Authentication endpoints')
+    .addTag('content', 'Content management endpoints')
+    .addTag('media', 'Media/file management endpoints')
+    .addTag('categories', 'Category management endpoints')
+    .addTag('tags', 'Tag management endpoints')
+    .addTag('comments', 'Comment management endpoints')
+    .addTag('users', 'User management endpoints')
+    .addTag('seo', 'SEO management endpoints')
+    .addTag('analytics', 'Analytics endpoints')
+    .addTag('search', 'Search endpoints')
+    .addTag('versions', 'Version control endpoints')
+    .addTag('audit', 'Audit log endpoints')
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+      tagsSorter: 'alpha',
+      operationsSorter: 'alpha',
+    },
   });
 
   // Global pipes: Validation and Sanitization

@@ -1,3 +1,5 @@
+import { ApiProperty } from '@nestjs/swagger';
+
 export interface PaginationMeta {
   total: number;
   page: number;
@@ -6,7 +8,21 @@ export interface PaginationMeta {
 }
 
 export class PaginatedResponseDto<T> {
+  @ApiProperty({
+    description: 'Array of data items',
+    isArray: true,
+  })
   data: T[];
+
+  @ApiProperty({
+    description: 'Pagination metadata',
+    example: {
+      total: 100,
+      page: 1,
+      limit: 10,
+      totalPages: 10,
+    },
+  })
   meta: PaginationMeta;
 
   constructor(data: T[], total: number, page: number, limit: number) {

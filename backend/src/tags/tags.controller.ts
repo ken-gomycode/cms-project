@@ -11,6 +11,14 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 
 import { Public } from '../auth/decorators/public.decorator';
@@ -23,6 +31,7 @@ import { CreateTagDto } from './dto/create-tag.dto';
 import { UpdateTagDto } from './dto/update-tag.dto';
 import { TagsService, TagWithCount } from './tags.service';
 
+@ApiTags('tags')
 @Controller('tags')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TagsController {
@@ -32,6 +41,15 @@ export class TagsController {
    * Create a new tag
    * Protected: Editor+ role required
    */
+  @ApiOperation({
+    summary: 'Create tag',
+    description: 'Create a new tag. Requires EDITOR or ADMIN role.',
+  })
+  @ApiBody({ type: CreateTagDto })
+  @ApiResponse({ status: 201, description: 'Tag created successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiBearerAuth('JWT-auth')
   @Post()
   @Roles(UserRole.ADMIN, UserRole.EDITOR)
   async create(@Body() createTagDto: CreateTagDto) {
@@ -42,6 +60,11 @@ export class TagsController {
    * Get all tags with pagination
    * Public endpoint
    */
+  @ApiOperation({
+    summary: 'Get all tags',
+    description: 'Retrieve all tags with pagination and content count. Public endpoint.',
+  })
+  @ApiResponse({ status: 200, description: 'Tags retrieved successfully' })
   @Get()
   @Public()
   async findAll(@Query() query: PaginationQueryDto): Promise<PaginatedResponseDto<TagWithCount>> {
@@ -52,6 +75,13 @@ export class TagsController {
    * Get a single tag by ID
    * Public endpoint
    */
+  @ApiOperation({
+    summary: 'Get tag by ID',
+    description: 'Retrieve a single tag with content count. Public endpoint.',
+  })
+  @ApiParam({ name: 'id', description: 'Tag UUID' })
+  @ApiResponse({ status: 200, description: 'Tag retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Tag not found' })
   @Get(':id')
   @Public()
   async findOne(@Param('id') id: string): Promise<TagWithCount> {
@@ -62,6 +92,17 @@ export class TagsController {
    * Update a tag
    * Protected: Editor+ role required
    */
+  @ApiOperation({
+    summary: 'Update tag',
+    description: 'Update tag details. Requires EDITOR or ADMIN role.',
+  })
+  @ApiParam({ name: 'id', description: 'Tag UUID' })
+  @ApiBody({ type: UpdateTagDto })
+  @ApiResponse({ status: 200, description: 'Tag updated successfully' })
+  @ApiResponse({ status: 404, description: 'Tag not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiBearerAuth('JWT-auth')
   @Patch(':id')
   @Roles(UserRole.ADMIN, UserRole.EDITOR)
   async update(@Param('id') id: string, @Body() updateTagDto: UpdateTagDto) {
@@ -72,6 +113,16 @@ export class TagsController {
    * Delete a tag
    * Protected: Admin only
    */
+  @ApiOperation({
+    summary: 'Delete tag',
+    description: 'Delete a tag. Requires ADMIN role.',
+  })
+  @ApiParam({ name: 'id', description: 'Tag UUID' })
+  @ApiResponse({ status: 204, description: 'Tag deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Tag not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiBearerAuth('JWT-auth')
   @Delete(':id')
   @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)

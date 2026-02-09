@@ -9,6 +9,16 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiProperty,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { Type } from 'class-transformer';
 import { IsBoolean, IsEnum, IsInt, IsOptional, Min } from 'class-validator';
@@ -26,22 +36,26 @@ import { UsersService, UserWithoutPassword } from './users.service';
  * Query DTO for user list filtering
  */
 class UserFilterQueryDto {
+  @ApiProperty({ required: false, example: 1, description: 'Page number' })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
   page?: number = 1;
 
+  @ApiProperty({ required: false, example: 10, description: 'Items per page' })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
   limit?: number = 10;
 
+  @ApiProperty({ required: false, enum: UserRole, description: 'Filter by user role' })
   @IsOptional()
   @IsEnum(UserRole)
   role?: UserRole;
 
+  @ApiProperty({ required: false, example: true, description: 'Filter by active status' })
   @IsOptional()
   @Type(() => Boolean)
   @IsBoolean()
@@ -52,6 +66,7 @@ class UserFilterQueryDto {
  * Controller for user management
  * Handles CRUD operations for users (admin) and profile management (authenticated users)
  */
+@ApiTags('users')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -59,6 +74,12 @@ export class UsersController {
   /**
    * Create a new user (Admin only)
    */
+  @ApiOperation({ summary: 'Create user', description: 'Create a new user. Requires ADMIN role.' })
+  @ApiBody({ type: CreateUserDto })
+  @ApiResponse({ status: 201, description: 'User created successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiBearerAuth('JWT-auth')
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
@@ -69,6 +90,18 @@ export class UsersController {
   /**
    * Get all users with pagination and filters (Admin only)
    */
+  @ApiOperation({
+    summary: 'Get all users',
+    description: 'Retrieve all users with pagination and filtering. Requires ADMIN role.',
+  })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'role', required: false, enum: UserRole })
+  @ApiQuery({ name: 'isActive', required: false, type: Boolean })
+  @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiBearerAuth('JWT-auth')
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
@@ -84,6 +117,13 @@ export class UsersController {
   /**
    * Get current user's profile (Protected)
    */
+  @ApiOperation({
+    summary: 'Get user profile',
+    description: 'Get current authenticated user profile.',
+  })
+  @ApiResponse({ status: 200, description: 'Profile retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiBearerAuth('JWT-auth')
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   async getProfile(@CurrentUser() user: CurrentUserType): Promise<UserWithoutPassword> {
@@ -93,6 +133,14 @@ export class UsersController {
   /**
    * Update current user's profile (Protected)
    */
+  @ApiOperation({
+    summary: 'Update user profile',
+    description: 'Update current authenticated user profile.',
+  })
+  @ApiBody({ type: UpdateProfileDto })
+  @ApiResponse({ status: 200, description: 'Profile updated successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiBearerAuth('JWT-auth')
   @Patch('profile')
   @UseGuards(JwtAuthGuard)
   async updateProfile(
@@ -105,6 +153,16 @@ export class UsersController {
   /**
    * Get a specific user by ID (Admin only)
    */
+  @ApiOperation({
+    summary: 'Get user by ID',
+    description: 'Retrieve a specific user by ID. Requires ADMIN role.',
+  })
+  @ApiParam({ name: 'id', description: 'User UUID' })
+  @ApiResponse({ status: 200, description: 'User retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiBearerAuth('JWT-auth')
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
@@ -115,6 +173,14 @@ export class UsersController {
   /**
    * Update a user by ID (Admin only)
    */
+  @ApiOperation({ summary: 'Update user', description: 'Update user by ID. Requires ADMIN role.' })
+  @ApiParam({ name: 'id', description: 'User UUID' })
+  @ApiBody({ type: UpdateUserDto })
+  @ApiResponse({ status: 200, description: 'User updated successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiBearerAuth('JWT-auth')
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
@@ -128,6 +194,16 @@ export class UsersController {
   /**
    * Soft delete a user by ID (Admin only)
    */
+  @ApiOperation({
+    summary: 'Delete user',
+    description: 'Soft delete user by ID. Requires ADMIN role.',
+  })
+  @ApiParam({ name: 'id', description: 'User UUID' })
+  @ApiResponse({ status: 200, description: 'User deleted successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiBearerAuth('JWT-auth')
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)

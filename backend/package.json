@@ -32,6 +32,7 @@
     "@nestjs/mapped-types": "^2.1.0",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^10.4.1",
+    "@nestjs/swagger": "^11.2.6",
     "@nestjs/throttler": "^6.5.0",
     "@prisma/client": "^5.22.0",
     "@types/multer": "^2.0.0",
@@ -53,6 +54,7 @@
     "rxjs": "^7.8.1",
     "sanitize-html": "^2.17.0",
     "sharp": "^0.34.5",
+    "swagger-ui-express": "^5.0.1",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
