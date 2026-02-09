@@ -24,6 +24,7 @@ export const queryKeys = {
     list: (filters: UserFilterParams) => [...queryKeys.users.lists(), filters] as const,
     details: () => [...queryKeys.users.all, 'detail'] as const,
     detail: (id: string) => [...queryKeys.users.details(), id] as const,
+    profile: () => [...queryKeys.users.all, 'profile'] as const,
   },
 
   // Content

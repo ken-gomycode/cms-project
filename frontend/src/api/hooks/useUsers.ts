@@ -7,6 +7,7 @@ import {
   UserFilterParams,
   CreateUserRequest,
   UpdateUserRequest,
+  UpdateProfileRequest,
 } from '@/types';
 
 /**
@@ -87,6 +88,36 @@ export const useDeleteUser = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.users.lists() });
+    },
+  });
+};
+
+/**
+ * Get current user's profile
+ */
+export const useProfile = () => {
+  return useQuery({
+    queryKey: queryKeys.users.profile(),
+    queryFn: async (): Promise<User> => {
+      const response = await axios.get<User>('/users/profile');
+      return response.data;
+    },
+  });
+};
+
+/**
+ * Update current user's profile
+ */
+export const useUpdateProfile = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: UpdateProfileRequest): Promise<User> => {
+      const response = await axios.patch<User>('/users/profile', data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.profile() });
     },
   });
 };

@@ -16,10 +16,5 @@ export { UserManagement as Users } from './UserManagement';
 // Analytics (Phase 27)
 export { AnalyticsDashboard as Analytics } from './AnalyticsDashboard';
 
-// Profile (Phase 19)
-export const Profile = () => (
-  <div>
-    <h2 className="text-xl font-semibold mb-4">Profile</h2>
-    <p className="text-gray-600">Profile page coming in Phase 19...</p>
-  </div>
-);
+// Profile
+export { Profile } from './Profile';

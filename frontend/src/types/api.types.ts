@@ -206,6 +206,15 @@ export interface UpdateUserRequest {
 }
 
 /**
+ * Update profile request (limited to safe fields)
+ */
+export interface UpdateProfileRequest {
+  firstName?: string;
+  lastName?: string;
+  avatar?: string;
+}
+
+/**
  * Upload media request (FormData)
  */
 export interface UploadMediaRequest {
