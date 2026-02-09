@@ -40,7 +40,7 @@ export class AuthController {
     description: 'Too many requests - rate limit exceeded',
   })
   @Public()
-  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  @Throttle({ default: { limit: process.env.NODE_ENV !== 'production' ? 10000 : 3, ttl: 60000 } })
   @Post('register')
   async register(@Body() registerDto: RegisterDto): Promise<AuthResponse> {
     return this.authService.register(registerDto);
@@ -71,7 +71,7 @@ export class AuthController {
     description: 'Too many requests - rate limit exceeded',
   })
   @Public()
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Throttle({ default: { limit: process.env.NODE_ENV !== 'production' ? 10000 : 5, ttl: 60000 } })
   @UseGuards(LocalAuthGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
@@ -33,14 +33,21 @@ import { VersionsModule } from './versions/versions.module';
         abortEarly: false,
       },
     }),
-    // Rate limiting configuration
-    ThrottlerModule.forRoot([
-      {
-        name: 'default',
-        ttl: 60000, // 60 seconds
-        limit: 60, // 60 requests per minute
+    // Rate limiting configuration — disabled in development for testing
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        const isDev = config.get('NODE_ENV') !== 'production';
+        return [
+          {
+            name: 'default',
+            ttl: 60000,
+            limit: isDev ? 10000 : 60, // Very high limit in dev for testing
+          },
+        ];
       },
-    ]),
+    }),
     CacheModule,
     PrismaModule,
     AuditModule,
