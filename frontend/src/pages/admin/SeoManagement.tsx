@@ -106,7 +106,7 @@ export const SeoManagement = () => {
       header: 'Title',
       accessor: 'title',
       sortable: true,
-      cell: (value: string, row: Content) => (
+      cell: (value: string, row: Content | any) => (
         <div>
           <div className="font-medium text-gray-900">{value}</div>
           <div className="text-xs text-gray-500 mt-0.5">{row.slug}</div>
@@ -156,7 +156,7 @@ export const SeoManagement = () => {
       header: 'Actions',
       accessor: (row) => row.id,
       width: 'w-32',
-      cell: (_id: string, row: Content) => (
+      cell: (_id: string, row: Content | any) => (
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
@@ -189,7 +189,7 @@ export const SeoManagement = () => {
   ];
 
   // Handlers
-  const handleEditClick = (content: Content) => {
+  const handleEditClick = (content: Content | any) => {
     setSelectedContent(content);
     setAnalysisResult(null);
 
@@ -340,7 +340,7 @@ export const SeoManagement = () => {
       <div className="bg-white rounded-lg shadow-sm">
         <DataTable
           columns={columns}
-          data={data?.data || []}
+          data={(data?.data || []) as Content[]}
           isLoading={isLoading}
           emptyMessage="No published content found. Publish some content first."
           sorting={{

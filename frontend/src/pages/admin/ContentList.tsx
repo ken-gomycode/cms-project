@@ -4,7 +4,7 @@ import { Plus, Edit, Trash2 } from 'lucide-react';
 import { useContents, useDeleteContent } from '@/api/hooks';
 import { Button, Badge, ConfirmDialog } from '@/components/ui';
 import { DataTable, Column } from '@/components/ui/DataTable';
-import { Content, ContentStatus } from '@/types';
+import { ContentWithRelations, ContentStatus } from '@/types';
 import { toast } from '@/stores/toastStore';
 import { formatDate } from '@/lib/dateUtils';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -49,12 +49,12 @@ export const ContentList = () => {
   const deleteContentMutation = useDeleteContent();
 
   // Table columns configuration
-  const columns: Column<Content>[] = [
+  const columns: Column<ContentWithRelations>[] = [
     {
       header: 'Title',
       accessor: 'title',
       sortable: true,
-      cell: (value: string, row: Content) => (
+      cell: (value: string, row: ContentWithRelations) => (
         <div className="max-w-md">
           <div className="font-medium text-gray-900 truncate">{value}</div>
           {row.excerpt && (
@@ -66,7 +66,7 @@ export const ContentList = () => {
     {
       header: 'Author',
       accessor: (row) => row.author,
-      cell: (author: Content['author']) => (
+      cell: (author: ContentWithRelations['author']) => (
         <span className="text-sm text-gray-700">
           {author ? `${author.firstName} ${author.lastName}` : 'Unknown'}
         </span>
