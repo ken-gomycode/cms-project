@@ -11,8 +11,11 @@ import {
   useCategories,
   useTags,
 } from '@/api/hooks';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button, Input, Textarea, Select, Spinner, Checkbox } from '@/components/ui';
-import { ContentStatus } from '@/types';
+import { queryKeys } from '@/api/queryKeys';
+import { ContentStatus, CreateContentRequest } from '@/types';
+import { formatForInput } from '@/lib/dateUtils';
 import { toast } from '@/stores/toastStore';
 
 /**
@@ -23,7 +26,7 @@ const contentSchema = z.object({
   slug: z.string().optional(),
   excerpt: z.string().optional(),
   body: z.string().min(10, 'Body must be at least 10 characters'),
-  status: z.nativeEnum(ContentStatus),
+  status: z.enum(ContentStatus),
   publishedAt: z.string().optional(),
   scheduledAt: z.string().optional(),
   categoryId: z.string().optional(),
@@ -47,6 +50,7 @@ type ContentFormData = z.infer<typeof contentSchema>;
  */
 export const ContentEditor = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { id } = useParams<{ id: string }>();
   const isEditMode = !!id;
 
@@ -56,8 +60,12 @@ export const ContentEditor = () => {
 
   // Data fetching
   const { data: content, isLoading: isLoadingContent } = useContent(id || '');
-  const { data: categoriesData } = useCategories({ limit: 100 });
-  const { data: tagsData } = useTags({ limit: 100 });
+  const { data: categoriesRaw } = useCategories({ limit: 100 });
+  const { data: tagsRaw } = useTags({ limit: 100 });
+
+  // Normalize: categories API returns a plain array, tags returns { data, meta }
+  const categories = Array.isArray(categoriesRaw) ? categoriesRaw : (categoriesRaw?.data ?? []);
+  const tags = Array.isArray(tagsRaw) ? tagsRaw : (tagsRaw?.data ?? []);
 
   // Mutations
   const createMutation = useCreateContent();
@@ -104,14 +112,10 @@ export const ContentEditor = () => {
         excerpt: content.excerpt || '',
         body: content.body,
         status: content.status,
-        publishedAt: content.publishedAt
-          ? new Date(content.publishedAt).toISOString().slice(0, 16)
-          : '',
-        scheduledAt: content.scheduledAt
-          ? new Date(content.scheduledAt).toISOString().slice(0, 16)
-          : '',
-        categoryId: content.categoryId || '',
-        tagIds: content.tags?.map((tag) => tag.id) || [],
+        publishedAt: content.publishedAt ? formatForInput(content.publishedAt) : '',
+        scheduledAt: content.scheduledAt ? formatForInput(content.scheduledAt) : '',
+        categoryId: (content as any).categories?.[0]?.category?.id ?? content.categoryId ?? '',
+        tagIds: content.tags?.map((t: any) => t.tag?.id ?? t.id).filter(Boolean) || [],
         featuredImage: content.featuredImage || '',
         seoMetadata: {
           metaTitle: content.seoMetadata?.metaTitle || '',
@@ -127,22 +131,16 @@ export const ContentEditor = () => {
   // Form submission
   const onSubmit = async (data: ContentFormData) => {
     try {
-      // Clean up empty fields
-      const payload = {
-        ...data,
+      // Build payload matching backend CreateContentDto
+      const payload: CreateContentRequest = {
+        title: data.title,
+        body: data.body,
         excerpt: data.excerpt || undefined,
-        categoryId: data.categoryId || undefined,
-        featuredImage: data.featuredImage || undefined,
-        publishedAt: data.publishedAt || undefined,
+        status: data.status,
+        tagIds: data.tagIds || [],
+        categoryIds: data.categoryId ? [data.categoryId] : [],
+        featuredImageId: data.featuredImage || undefined,
         scheduledAt: data.scheduledAt || undefined,
-        seoMetadata:
-          data.seoMetadata &&
-          (data.seoMetadata.metaTitle ||
-            data.seoMetadata.metaDescription ||
-            data.seoMetadata.ogTitle ||
-            data.seoMetadata.ogDescription)
-            ? data.seoMetadata
-            : undefined,
       };
 
       if (isEditMode && id) {
@@ -153,25 +151,33 @@ export const ContentEditor = () => {
         toast.success('Content created successfully');
       }
 
+      // Wait for content list cache to refresh before navigating
+      await queryClient.invalidateQueries({ queryKey: queryKeys.content.lists() });
       navigate('/admin/content');
-    } catch (error) {
-      toast.error(isEditMode ? 'Failed to update content' : 'Failed to create content');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Content save error:', error);
+      toast.error(
+        isEditMode
+          ? `Failed to update content: ${message}`
+          : `Failed to create content: ${message}`,
+      );
+    }
+  };
+
+  // Log validation errors for debugging
+  const onValidationError = (fieldErrors: Record<string, unknown>) => {
+    console.error('Form validation errors:', fieldErrors);
+    const firstError = Object.values(fieldErrors)[0] as { message?: string } | undefined;
+    if (firstError?.message) {
+      toast.error(`Validation error: ${firstError.message}`);
     }
   };
 
   // Handle save as draft
   const handleSaveAsDraft = () => {
     setValue('status', ContentStatus.DRAFT);
-    handleSubmit(onSubmit)();
-  };
-
-  // Handle publish
-  const handlePublish = () => {
-    setValue('status', ContentStatus.PUBLISHED);
-    if (!watch('publishedAt')) {
-      setValue('publishedAt', new Date().toISOString().slice(0, 16));
-    }
-    handleSubmit(onSubmit)();
+    handleSubmit(onSubmit, onValidationError)();
   };
 
   // Loading state
@@ -204,7 +210,7 @@ export const ContentEditor = () => {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit, onValidationError)}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Column */}
           <div className="lg:col-span-2 space-y-6">
@@ -360,7 +366,7 @@ export const ContentEditor = () => {
               </h3>
               <Select {...register('categoryId')} label="Select Category">
                 <option value="">None</option>
-                {categoriesData?.data.map((category) => (
+                {categories.map((category) => (
                   <option key={category.id} value={category.id}>
                     {category.name}
                   </option>
@@ -373,35 +379,36 @@ export const ContentEditor = () => {
               <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-4">
                 Tags
               </h3>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {tagsData?.data.map((tag) => (
-                  <Controller
-                    key={tag.id}
-                    name="tagIds"
-                    control={control}
-                    render={({ field }) => (
-                      <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+              <Controller
+                name="tagIds"
+                control={control}
+                render={({ field }) => (
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {tags.map((tag) => (
+                      <label
+                        key={tag.id}
+                        className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
+                      >
                         <Checkbox
                           checked={field.value?.includes(tag.id) || false}
                           onChange={(e) => {
-                            const checked = e.target.checked;
                             const currentTags = field.value || [];
-                            if (checked) {
+                            if (e.target.checked) {
                               field.onChange([...currentTags, tag.id]);
                             } else {
-                              field.onChange(currentTags.filter((id) => id !== tag.id));
+                              field.onChange(currentTags.filter((id: string) => id !== tag.id));
                             }
                           }}
                         />
                         <span className="text-sm text-gray-700">{tag.name}</span>
                       </label>
+                    ))}
+                    {tags.length === 0 && (
+                      <p className="text-sm text-gray-500">No tags available</p>
                     )}
-                  />
-                ))}
-                {(!tagsData?.data || tagsData.data.length === 0) && (
-                  <p className="text-sm text-gray-500">No tags available</p>
+                  </div>
                 )}
-              </div>
+              />
             </div>
 
             {/* Featured Image */}
@@ -456,9 +463,16 @@ export const ContentEditor = () => {
                 </Button>
               )}
               <Button
-                type="button"
+                type="submit"
                 variant="primary"
-                onClick={isEditMode ? handleSubmit(onSubmit) : handlePublish}
+                onClick={() => {
+                  if (!isEditMode) {
+                    setValue('status', ContentStatus.PUBLISHED);
+                    if (!watch('publishedAt')) {
+                      setValue('publishedAt', formatForInput(new Date()));
+                    }
+                  }
+                }}
                 isLoading={
                   isSubmitting && (isEditMode || watch('status') === ContentStatus.PUBLISHED)
                 }

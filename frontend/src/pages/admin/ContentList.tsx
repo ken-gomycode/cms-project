@@ -6,6 +6,7 @@ import { Button, Badge, ConfirmDialog } from '@/components/ui';
 import { DataTable, Column } from '@/components/ui/DataTable';
 import { Content, ContentStatus } from '@/types';
 import { toast } from '@/stores/toastStore';
+import { formatDate } from '@/lib/dateUtils';
 import { useDebounce } from '@/hooks/useDebounce';
 
 /**
@@ -81,15 +82,7 @@ export const ContentList = () => {
       header: 'Created',
       accessor: 'createdAt',
       sortable: true,
-      cell: (date: string) => (
-        <span className="text-sm text-gray-600">
-          {new Date(date).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-          })}
-        </span>
-      ),
+      cell: (date: string) => <span className="text-sm text-gray-600">{formatDate(date)}</span>,
     },
     {
       header: 'Actions',

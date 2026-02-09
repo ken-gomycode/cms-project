@@ -106,28 +106,13 @@ export interface MediaFilterParams extends FilterParams {
  */
 export interface CreateContentRequest {
   title: string;
-  slug?: string;
-  excerpt?: string;
   body: string;
-  featuredImage?: string;
-  status: ContentStatus;
-  publishedAt?: string;
-  scheduledAt?: string;
-  categoryId?: string;
+  excerpt?: string;
+  status?: ContentStatus;
+  categoryIds?: string[];
   tagIds?: string[];
-  seoMetadata?: {
-    metaTitle?: string;
-    metaDescription?: string;
-    metaKeywords?: string;
-    ogTitle?: string;
-    ogDescription?: string;
-    ogImage?: string;
-    twitterCard?: string;
-    twitterTitle?: string;
-    twitterDescription?: string;
-    twitterImage?: string;
-    canonicalUrl?: string;
-  };
+  featuredImageId?: string;
+  scheduledAt?: string;
 }
 
 /**
