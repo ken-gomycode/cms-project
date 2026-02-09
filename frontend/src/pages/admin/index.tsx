@@ -7,23 +7,9 @@ export { ContentList } from './ContentList';
 export { ContentEditor } from './ContentEditor';
 export { MediaLibrary } from './MediaLibrary';
 
-// Comment Moderation (Phase 24)
-export const CommentModeration = () => (
-  <div>
-    <h2 className="text-xl font-semibold mb-4">Comment Moderation</h2>
-    <p className="text-gray-600">Comment moderation coming in Phase 24...</p>
-  </div>
-);
-
+export { CommentModeration } from './CommentModeration';
 export { Categories } from './Categories';
-
-// Tags (Phase 23)
-export const Tags = () => (
-  <div>
-    <h2 className="text-xl font-semibold mb-4">Tags</h2>
-    <p className="text-gray-600">Tag management coming in Phase 23...</p>
-  </div>
-);
+export { Tags } from './Tags';
 
 // Users (Phase 25)
 export const Users = () => (

@@ -9,3 +9,4 @@ export * from './useCategories';
 export * from './useTags';
 export * from './useDashboard';
 export * from './useMedia';
+export * from './useComments';

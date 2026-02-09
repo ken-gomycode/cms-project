@@ -1,8 +1,8 @@
-import { ContentStatus } from '@/types';
+import { ContentStatus, CommentStatus } from '@/types';
 
 export interface BadgeProps {
   /** Status variant */
-  status: ContentStatus | string;
+  status: ContentStatus | CommentStatus | string;
   /** Optional className */
   className?: string;
 }
@@ -77,6 +77,35 @@ export const Badge = ({ status, className = '' }: BadgeProps) => {
       textColor: 'text-gray-700',
       bgColor: 'bg-gray-50',
       borderColor: 'border-gray-200',
+    },
+    // Support for CommentStatus badges
+    PENDING: {
+      label: 'Pending',
+      dotColor: 'bg-warning-500',
+      textColor: 'text-warning-700',
+      bgColor: 'bg-warning-50',
+      borderColor: 'border-warning-200',
+    },
+    APPROVED: {
+      label: 'Approved',
+      dotColor: 'bg-success-500',
+      textColor: 'text-success-700',
+      bgColor: 'bg-success-50',
+      borderColor: 'border-success-200',
+    },
+    REJECTED: {
+      label: 'Rejected',
+      dotColor: 'bg-error-500',
+      textColor: 'text-error-700',
+      bgColor: 'bg-error-50',
+      borderColor: 'border-error-200',
+    },
+    SPAM: {
+      label: 'Spam',
+      dotColor: 'bg-gray-500',
+      textColor: 'text-gray-700',
+      bgColor: 'bg-gray-100',
+      borderColor: 'border-gray-300',
     },
   };
 
