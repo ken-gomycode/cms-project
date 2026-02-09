@@ -6,6 +6,7 @@ interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
   isAuthenticated: boolean;
+  isInitialized: boolean;
   setTokens: (accessToken: string, refreshToken: string) => void;
   setUser: (user: User) => void;
   login: (user: User, accessToken: string, refreshToken: string) => void;
@@ -21,6 +22,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   accessToken: null,
   refreshToken: null,
   isAuthenticated: false,
+  isInitialized: false,
 
   /**
    * Set access and refresh tokens
@@ -80,7 +82,10 @@ export const useAuthStore = create<AuthState>((set) => ({
           accessToken,
           refreshToken,
           isAuthenticated: true,
+          isInitialized: true,
         });
+      } else {
+        set({ isInitialized: true });
       }
     } catch (error) {
       console.error('Failed to initialize auth state:', error);
@@ -88,6 +93,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.removeItem('user');
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
+      set({ isInitialized: true });
     }
   },
 }));
