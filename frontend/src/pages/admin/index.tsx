@@ -10,14 +10,8 @@ export { MediaLibrary } from './MediaLibrary';
 export { CommentModeration } from './CommentModeration';
 export { Categories } from './Categories';
 export { Tags } from './Tags';
-
-// Users (Phase 25)
-export const Users = () => (
-  <div>
-    <h2 className="text-xl font-semibold mb-4">User Management</h2>
-    <p className="text-gray-600">User management coming in Phase 25...</p>
-  </div>
-);
+export { SeoManagement } from './SeoManagement';
+export { UserManagement as Users } from './UserManagement';
 
 // Analytics (Phase 27)
 export const Analytics = () => (

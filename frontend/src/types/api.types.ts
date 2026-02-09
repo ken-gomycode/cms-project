@@ -188,10 +188,9 @@ export interface BatchModerateCommentsRequest {
 export interface CreateUserRequest {
   email: string;
   password: string;
-  name: string;
-  role: UserRole;
-  bio?: string;
-  avatar?: string;
+  firstName: string;
+  lastName: string;
+  role?: UserRole;
 }
 
 /**
@@ -199,10 +198,9 @@ export interface CreateUserRequest {
  */
 export interface UpdateUserRequest {
   email?: string;
-  name?: string;
+  firstName?: string;
+  lastName?: string;
   role?: UserRole;
-  bio?: string;
-  avatar?: string;
   isActive?: boolean;
   password?: string;
 }
