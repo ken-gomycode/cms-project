@@ -128,6 +128,27 @@ export interface Content {
 }
 
 /**
+ * Content with all relations (matches backend ContentWithRelations)
+ * Backend returns categories and tags via join tables
+ */
+export interface ContentWithRelations extends Omit<Content, 'category' | 'tags'> {
+  categories?: Array<{
+    category: {
+      id: string;
+      name: string;
+      slug: string;
+    };
+  }>;
+  tags?: Array<{
+    tag: {
+      id: string;
+      name: string;
+      slug: string;
+    };
+  }>;
+}
+
+/**
  * Comment entity
  */
 export interface Comment {

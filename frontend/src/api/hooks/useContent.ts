@@ -3,6 +3,7 @@ import axios from '@/lib/axios';
 import { queryKeys } from '../queryKeys';
 import {
   Content,
+  ContentWithRelations,
   PaginatedResponse,
   ContentFilterParams,
   CreateContentRequest,
@@ -12,12 +13,13 @@ import {
 
 /**
  * Get paginated content list
+ * Returns ContentWithRelations which includes nested categories and tags
  */
 export const useContents = (filters: ContentFilterParams = {}) => {
   return useQuery({
     queryKey: queryKeys.content.list(filters),
-    queryFn: async (): Promise<PaginatedResponse<Content>> => {
-      const response = await axios.get<PaginatedResponse<Content>>('/content', {
+    queryFn: async (): Promise<PaginatedResponse<ContentWithRelations>> => {
+      const response = await axios.get<PaginatedResponse<ContentWithRelations>>('/content', {
         params: filters,
       });
       return response.data;
@@ -27,12 +29,13 @@ export const useContents = (filters: ContentFilterParams = {}) => {
 
 /**
  * Get content by ID
+ * Returns ContentWithRelations which includes nested categories and tags
  */
 export const useContent = (id: string) => {
   return useQuery({
     queryKey: queryKeys.content.detail(id),
-    queryFn: async (): Promise<Content> => {
-      const response = await axios.get<Content>(`/content/${id}`);
+    queryFn: async (): Promise<ContentWithRelations> => {
+      const response = await axios.get<ContentWithRelations>(`/content/${id}`);
       return response.data;
     },
     enabled: !!id,
@@ -41,12 +44,13 @@ export const useContent = (id: string) => {
 
 /**
  * Get content by slug (for public pages)
+ * Returns ContentWithRelations which includes nested categories and tags
  */
 export const useContentBySlug = (slug: string) => {
   return useQuery({
     queryKey: queryKeys.content.bySlug(slug),
-    queryFn: async (): Promise<Content> => {
-      const response = await axios.get<Content>(`/content/slug/${slug}`);
+    queryFn: async (): Promise<ContentWithRelations> => {
+      const response = await axios.get<ContentWithRelations>(`/content/${slug}`);
       return response.data;
     },
     enabled: !!slug,
