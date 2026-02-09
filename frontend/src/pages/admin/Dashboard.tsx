@@ -33,6 +33,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Spinner } from '@/components/ui/Spinner';
 import { toast } from '@/stores/toastStore';
 import { CommentStatus } from '@/types/enums.types';
+import { formatRelative } from '@/lib/dateUtils';
 
 /**
  * Stat card component with refined visual design
@@ -398,7 +399,7 @@ export const Dashboard = () => {
                         </p>
                       </div>
                       <time className="text-xs text-gray-500 whitespace-nowrap">
-                        {new Date(comment.createdAt).toLocaleDateString()}
+                        {formatRelative(comment.createdAt)}
                       </time>
                     </div>
 

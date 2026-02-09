@@ -13,6 +13,7 @@ import { Button, Modal, ConfirmDialog, Input, Textarea } from '@/components/ui';
 import { DataTable, Column } from '@/components/ui/DataTable';
 import { Category, CreateCategoryRequest, UpdateCategoryRequest } from '@/types';
 import { toast } from '@/stores/toastStore';
+import { formatDate } from '@/lib/dateUtils';
 
 /**
  * Category form validation schema
@@ -161,15 +162,7 @@ export const Categories = () => {
       header: 'Created',
       accessor: 'createdAt',
       sortable: true,
-      cell: (date: string) => (
-        <span className="text-sm text-gray-600">
-          {new Date(date).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-          })}
-        </span>
-      ),
+      cell: (date: string) => <span className="text-sm text-gray-600">{formatDate(date)}</span>,
     },
     {
       header: 'Actions',

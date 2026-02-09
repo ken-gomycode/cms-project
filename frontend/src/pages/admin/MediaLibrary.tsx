@@ -25,6 +25,7 @@ import { Spinner } from '@/components/ui/Spinner';
 import { DataTable } from '@/components/ui/DataTable';
 import type { Media } from '@/types';
 import { toast } from '@/stores/toastStore';
+import { formatDate } from '@/lib/dateUtils';
 
 type ViewMode = 'grid' | 'list';
 
@@ -532,7 +533,7 @@ export function MediaLibrary() {
               },
               {
                 header: 'Date',
-                accessor: (media: Media) => new Date(media.createdAt).toLocaleDateString(),
+                accessor: (media: Media) => formatDate(media.createdAt),
               },
               {
                 header: 'Actions',
@@ -749,9 +750,7 @@ export function MediaLibrary() {
               </div>
               <div>
                 <p className="text-gray-500">Uploaded</p>
-                <p className="font-medium text-gray-900">
-                  {new Date(selectedMedia.createdAt).toLocaleDateString()}
-                </p>
+                <p className="font-medium text-gray-900">{formatDate(selectedMedia.createdAt)}</p>
               </div>
               {selectedMedia.uploadedBy && (
                 <div>
