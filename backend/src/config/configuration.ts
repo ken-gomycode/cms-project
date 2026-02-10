@@ -24,6 +24,11 @@ export interface Configuration {
   logging: {
     level: string;
   };
+  cloudinary: {
+    cloudName: string | undefined;
+    apiKey: string | undefined;
+    apiSecret: string | undefined;
+  };
 }
 
 export const validationSchema = Joi.object({
@@ -38,6 +43,9 @@ export const validationSchema = Joi.object({
   UPLOAD_DIR: Joi.string().default('./uploads'),
   MAX_FILE_SIZE: Joi.number().default(10485760), // 10MB
   LOG_LEVEL: Joi.string().valid('error', 'warn', 'info', 'debug', 'verbose').default('info'),
+  CLOUDINARY_CLOUD_NAME: Joi.string().optional(),
+  CLOUDINARY_API_KEY: Joi.string().optional(),
+  CLOUDINARY_API_SECRET: Joi.string().optional(),
 });
 
 export default (): Configuration => ({
@@ -63,5 +71,10 @@ export default (): Configuration => ({
   },
   logging: {
     level: process.env.LOG_LEVEL || 'info',
+  },
+  cloudinary: {
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+    apiKey: process.env.CLOUDINARY_API_KEY,
+    apiSecret: process.env.CLOUDINARY_API_SECRET,
   },
 });
