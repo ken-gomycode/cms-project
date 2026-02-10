@@ -3,6 +3,7 @@ import { Category } from '@prisma/client';
 
 import { slugify } from '../common/utils/slug.util';
 import { PrismaService } from '../prisma/prisma.service';
+
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 

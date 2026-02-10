@@ -1,11 +1,13 @@
+import { randomBytes } from 'crypto';
+
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { User, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { randomBytes } from 'crypto';
 
 import { PrismaService } from '../prisma/prisma.service';
+
 import { RegisterDto } from './dto/register.dto';
 
 export interface JwtPayload {

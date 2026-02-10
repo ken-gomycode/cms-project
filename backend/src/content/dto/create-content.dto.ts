@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsDateString, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
 import { ContentStatus } from '@prisma/client';
+import { IsArray, IsDateString, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
 
 /**
  * DTO for creating content

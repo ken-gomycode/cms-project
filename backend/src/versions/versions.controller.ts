@@ -17,6 +17,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { PaginatedResponseDto } from '../common/dto/paginated-response.dto';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { ContentService } from '../content/content.service';
+
 import { CompareVersionsDto } from './dto/compare-versions.dto';
 import { VersionsService, VersionWithRelations } from './versions.service';
 

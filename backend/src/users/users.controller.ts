@@ -22,14 +22,16 @@ import {
 import { UserRole } from '@prisma/client';
 import { Type } from 'class-transformer';
 import { IsBoolean, IsEnum, IsInt, IsOptional, Min } from 'class-validator';
+
+import { CurrentUser, CurrentUserType } from '../auth/decorators/current-user.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { CurrentUser, CurrentUserType } from '../auth/decorators/current-user.decorator';
 import { PaginatedResponseDto } from '../common/dto/paginated-response.dto';
+
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersService, UserWithoutPassword } from './users.service';
 
 /**

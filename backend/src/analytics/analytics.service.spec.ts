@@ -3,6 +3,7 @@ import { ContentStatus, UserRole } from '@prisma/client';
 
 import { CacheService } from '../cache/cache.service';
 import { PrismaService } from '../prisma/prisma.service';
+
 import { AnalyticsService } from './analytics.service';
 
 describe('AnalyticsService', () => {

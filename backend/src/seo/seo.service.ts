@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { SeoMetadata } from '@prisma/client';
 
 import { PrismaService } from '../prisma/prisma.service';
+
 import { CreateSeoDto } from './dto/create-seo.dto';
 
 /**

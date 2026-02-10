@@ -1,8 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ContentStatus } from '@prisma/client';
 
-import { SortOrder } from '../common/dto/pagination-query.dto';
 import { PaginatedResponseDto } from '../common/dto/paginated-response.dto';
+import { SortOrder } from '../common/dto/pagination-query.dto';
+
 import { SearchQueryDto } from './dto/search-query.dto';
 import { SuggestQueryDto } from './dto/suggest-query.dto';
 import { SearchController } from './search.controller';

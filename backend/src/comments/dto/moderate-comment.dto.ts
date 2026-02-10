@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum } from 'class-validator';
 import { CommentStatus } from '@prisma/client';
+import { IsEnum } from 'class-validator';
 
 /**
  * DTO for moderating a single comment

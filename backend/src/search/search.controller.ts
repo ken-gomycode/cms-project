@@ -2,6 +2,7 @@ import { Controller, Get, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { PaginatedResponseDto } from '../common/dto/paginated-response.dto';
+
 import { SearchQueryDto } from './dto/search-query.dto';
 import { SuggestQueryDto } from './dto/suggest-query.dto';
 import { SearchResult, SearchService, SuggestionResult } from './search.service';

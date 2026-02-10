@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserRole } from '@prisma/client';
 
 import { PrismaService } from '../prisma/prisma.service';
+
 import { CreateSeoDto } from './dto/create-seo.dto';
 import { SeoAnalyzerService } from './seo-analyzer.service';
 import { SeoController } from './seo.controller';

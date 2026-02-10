@@ -6,6 +6,7 @@ import { User, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 import { PrismaService } from '../prisma/prisma.service';
+
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 

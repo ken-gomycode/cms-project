@@ -2,6 +2,7 @@ import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { PrismaService } from '../prisma/prisma.service';
+
 import { SeoAnalyzerService } from './seo-analyzer.service';
 
 describe('SeoAnalyzerService', () => {

@@ -1,12 +1,14 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { ConfigService } from '@nestjs/config';
-import { NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { promises as fs } from 'fs';
 import * as path from 'path';
+
+import { NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Test, TestingModule } from '@nestjs/testing';
 import * as sharp from 'sharp';
 
-import { MediaService } from './media.service';
 import { PrismaService } from '../prisma/prisma.service';
+
+import { MediaService } from './media.service';
 
 jest.mock('fs', () => {
   const actualFs = jest.requireActual('fs');

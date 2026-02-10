@@ -1,10 +1,11 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Content, ContentStatus, Prisma } from '@prisma/client';
 
-import { PaginatedResponseDto } from '../common/dto/paginated-response.dto';
 import { CacheService } from '../cache/cache.service';
+import { PaginatedResponseDto } from '../common/dto/paginated-response.dto';
 import { generateUniqueSlug, slugify } from '../common/utils/slug.util';
 import { PrismaService } from '../prisma/prisma.service';
+
 import { ContentFilterDto } from './dto/content-filter.dto';
 import { CreateContentDto } from './dto/create-content.dto';
 import { UpdateContentDto } from './dto/update-content.dto';

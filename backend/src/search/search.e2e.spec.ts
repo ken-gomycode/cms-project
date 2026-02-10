@@ -4,6 +4,7 @@ import { ContentStatus } from '@prisma/client';
 import * as request from 'supertest';
 
 import { PrismaService } from '../prisma/prisma.service';
+
 import { SearchModule } from './search.module';
 
 describe('SearchController (e2e)', () => {

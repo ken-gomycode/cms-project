@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
-import { MulterModule } from '@nestjs/platform-express';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MulterModule } from '@nestjs/platform-express';
 
 import { PrismaModule } from '../prisma/prisma.module';
+
 import { MediaController } from './media.controller';
 import { MediaService } from './media.service';
 

@@ -3,6 +3,7 @@ import { ContentStatus, Prisma } from '@prisma/client';
 
 import { PaginatedResponseDto } from '../common/dto/paginated-response.dto';
 import { PrismaService } from '../prisma/prisma.service';
+
 import { SearchQueryDto } from './dto/search-query.dto';
 import { SuggestQueryDto } from './dto/suggest-query.dto';
 

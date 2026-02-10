@@ -5,6 +5,7 @@ import { User, UserRole } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { JwtPayload } from '../auth.service';
+
 import { JwtStrategy } from './jwt.strategy';
 
 describe('JwtStrategy', () => {

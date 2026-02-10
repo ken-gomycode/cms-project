@@ -1,6 +1,6 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Test, TestingModule } from '@nestjs/testing';
 
 import { MediaController } from './media.controller';
 import { MediaService } from './media.service';

@@ -9,6 +9,8 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ExecutionContext, Injectable } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -25,6 +27,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
+
 import { CommentsService } from './comments.service';
 import { BatchModerateDto } from './dto/batch-moderate.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -35,8 +38,6 @@ import { ModerateCommentDto } from './dto/moderate-comment.dto';
  * Allows both authenticated and unauthenticated access
  * but populates request.user if token is present
  */
-import { ExecutionContext, Injectable } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 
 @Injectable()
 class OptionalJwtAuthGuard extends AuthGuard('jwt') {

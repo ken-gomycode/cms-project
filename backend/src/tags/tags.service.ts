@@ -5,6 +5,7 @@ import { PaginatedResponseDto } from '../common/dto/paginated-response.dto';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { slugify } from '../common/utils/slug.util';
 import { PrismaService } from '../prisma/prisma.service';
+
 import { CreateTagDto } from './dto/create-tag.dto';
 import { UpdateTagDto } from './dto/update-tag.dto';
 

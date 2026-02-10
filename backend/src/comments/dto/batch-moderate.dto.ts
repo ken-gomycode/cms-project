@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsEnum, IsUUID } from 'class-validator';
 import { CommentStatus } from '@prisma/client';
+import { IsArray, IsEnum, IsUUID } from 'class-validator';
 
 /**
  * DTO for batch moderating multiple comments

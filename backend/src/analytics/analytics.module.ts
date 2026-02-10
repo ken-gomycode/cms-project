@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { PrismaModule } from '../prisma/prisma.module';
+
 import { AnalyticsController } from './analytics.controller';
 import { AnalyticsInterceptor } from './analytics.interceptor';
 import { AnalyticsService } from './analytics.service';

@@ -4,6 +4,7 @@ import { ContentStatus, UserRole } from '@prisma/client';
 
 import { CurrentUserType } from '../auth/decorators/current-user.decorator';
 import { ContentService } from '../content/content.service';
+
 import { VersionsController } from './versions.controller';
 import { VersionsService } from './versions.service';
 

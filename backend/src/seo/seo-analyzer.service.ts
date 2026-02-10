@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service';
+
 import { SeoCheck, SeoScoreDto } from './dto/seo-score.dto';
 
 /**
